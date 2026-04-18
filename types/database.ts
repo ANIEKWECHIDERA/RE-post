@@ -454,6 +454,30 @@ export type Database = {
           updated_at?: Timestamp;
         }
       >;
+      connection_oauth_states: TableDefinition<
+        {
+          id: Uuid;
+          user_id: Uuid;
+          platform: SocialPlatform;
+          state_hash: string;
+          code_verifier_ciphertext: string;
+          redirect_path: string;
+          expires_at: Timestamp;
+          consumed_at: Timestamp | null;
+          created_at: Timestamp;
+        },
+        {
+          id?: Uuid;
+          user_id: Uuid;
+          platform: SocialPlatform;
+          state_hash: string;
+          code_verifier_ciphertext: string;
+          redirect_path?: string;
+          expires_at: Timestamp;
+          consumed_at?: Timestamp | null;
+          created_at?: Timestamp;
+        }
+      >;
     };
     Views: Record<string, never>;
     Functions: {

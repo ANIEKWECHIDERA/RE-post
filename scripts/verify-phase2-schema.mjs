@@ -3,8 +3,10 @@ import { resolve } from "node:path";
 
 const migrationPath = resolve("supabase/migrations/202604180001_repost_v2_phase2_schema.sql");
 const realtimeMigrationPath = resolve("supabase/migrations/202604180002_repost_v2_phase4_realtime.sql");
+const connectionMigrationPath = resolve("supabase/migrations/202604190003_repost_v2_phase6_connection_oauth_states.sql");
 const sql = readFileSync(migrationPath, "utf8");
 const realtimeSql = readFileSync(realtimeMigrationPath, "utf8");
+const connectionSql = readFileSync(connectionMigrationPath, "utf8");
 
 const requiredTables = [
   "profiles",
@@ -73,6 +75,14 @@ if (!sql.includes("insert into storage.buckets")) {
 
 if (!sql.includes("create trigger on_auth_user_created")) {
   missing.push("trigger:on_auth_user_created");
+}
+
+if (!connectionSql.includes("create table public.connection_oauth_states")) {
+  missing.push("table:connection_oauth_states");
+}
+
+if (!connectionSql.includes("alter table public.connection_oauth_states enable row level security")) {
+  missing.push("rls:connection_oauth_states");
 }
 
 for (const realtimeTable of [

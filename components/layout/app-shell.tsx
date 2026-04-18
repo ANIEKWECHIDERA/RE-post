@@ -12,7 +12,7 @@ const navItems = [
   { label: "Home", href: "/dashboard", icon: Home, active: true },
   { label: "Compose", href: "/compose", icon: PenSquare, active: false },
   { label: "Schedule", href: "/dashboard", icon: CalendarDays, active: false },
-  { label: "Connections", href: "/dashboard", icon: Link2, active: false },
+  { label: "Connections", href: "/connections", icon: Link2, active: false },
   { label: "Analytics", href: "/dashboard", icon: BarChart3, active: false },
 ];
 

@@ -15,6 +15,8 @@ Current completed phases:
 - Phase 0: Discovery, cleanup, and architecture plan. See `docs/REPOST_V2_PHASE0.md`.
 - Phase 1: Next.js foundation and project setup. See `docs/REPOST_V2_PHASE1.md`.
 - Phase 2: Supabase schema, RLS, storage policies, and database type surface. See `docs/REPOST_V2_PHASE2.md`.
+- Phase 3: Supabase Auth and protected user account system. See `docs/REPOST_V2_PHASE3.md`.
+- Phase 4: Supabase-backed dashboard data path and realtime home scaffolding. See `docs/REPOST_V2_PHASE4.md`.
 
 ## Product Direction
 
@@ -118,6 +120,7 @@ Notes:
 ```text
 app/
 |-- (auth)/
+|-- (app)/
 |-- api/
 |-- globals.css
 |-- layout.tsx
@@ -147,8 +150,14 @@ public/images/
 
 ## Key Files
 
-- `app/page.tsx`: Root creator dashboard route.
+- `app/page.tsx`: Root entry route that redirects to `/dashboard`.
+- `app/(app)/layout.tsx`: Protected app route boundary.
+- `app/(app)/dashboard/page.tsx`: Authenticated dashboard page.
+- `app/(auth)/sign-in/page.tsx`: Sign-in route.
+- `app/(auth)/sign-up/page.tsx`: Sign-up route.
 - `components/layout/app-shell.tsx`: Main app shell/sidebar/header.
+- `components/auth/auth-form.tsx`: Sign-in/sign-up form bound to server actions.
+- `components/auth/supabase-setup-required.tsx`: No-env setup blocker.
 - `features/dashboard/components/creator-dashboard.tsx`: Current Phase 1 dashboard.
 - `components/providers/app-providers.tsx`: TanStack Query provider.
 - `stores/composer-store.ts`: Zustand composer UI store.
@@ -162,14 +171,24 @@ public/images/
 - `lib/supabase/middleware.ts`: Supabase session refresh helper.
 - `proxy.ts`: Next.js 16 request proxy for session refresh.
 - `server/publishing/readiness.ts`: Server-only publishing readiness scaffold.
+- `server/auth/actions.ts`: Sign up, sign in, and sign out server actions.
+- `server/auth/session.ts`: Server-side user lookup.
+- `server/profiles/bootstrap.ts`: Profile/streak bootstrap repair helper.
+- `server/dashboard/queries.ts`: Server-side dashboard summary query.
+- `app/api/dashboard/summary/route.ts`: Authenticated dashboard summary endpoint.
+- `hooks/use-dashboard-summary.ts`: TanStack Query dashboard summary hook.
+- `hooks/use-dashboard-realtime.ts`: Focused Supabase Realtime dashboard invalidation hook.
 - `app/api/health/route.ts`: Health endpoint.
 - `supabase/migrations/202604180001_repost_v2_phase2_schema.sql`: Phase 2 schema/RLS/storage migration.
+- `supabase/migrations/202604180002_repost_v2_phase4_realtime.sql`: Realtime publication migration for dashboard tables.
 - `supabase/tests/phase2_rls_smoke.sql`: Ownership/RLS smoke test for a real Supabase database.
 - `scripts/verify-phase2-schema.mjs`: Local schema coverage verifier.
 - `types/database.ts`: Manual Phase 2 Supabase database type surface.
 - `docs/REPOST_V2_PHASE0.md`: Architecture and migration plan.
 - `docs/REPOST_V2_PHASE1.md`: Phase 1 implementation record.
 - `docs/REPOST_V2_PHASE2.md`: Phase 2 schema implementation record.
+- `docs/REPOST_V2_PHASE3.md`: Phase 3 auth implementation record.
+- `docs/REPOST_V2_PHASE4.md`: Phase 4 dashboard/realtime implementation record.
 
 ## Security Principles
 
@@ -185,10 +204,10 @@ public/images/
 
 ## Current Known Limitations
 
-- Supabase schema and RLS are implemented in source, but the migration has not been applied in this workspace because Docker is not installed and no hosted Supabase project is linked.
-- Auth UI is scaffolded but disabled until Phase 3.
-- Dashboard data is mocked in Phase 1.
-- Realtime subscriptions are not live yet; Phase 2 creates the activity/streak/status tables in migration source, and Phase 4 will wire subscriptions after the schema is applied.
+- Supabase env vars are present in `.env`, but migrations still need to be applied to the Supabase project before authenticated dashboard data can be verified.
+- Auth routes and server actions are implemented, but live sign up/sign in requires Supabase env vars and the Phase 2 migration applied.
+- Dashboard data path is implemented, but unauthenticated smoke tests correctly return `401` for `/api/dashboard/summary`.
+- Realtime subscription code and publication migration are implemented, but live realtime verification needs an authenticated user and applied migrations.
 - Media upload is not implemented yet.
 - Social connections are not implemented yet.
 - Publishing engine is scaffolded only; no provider publishing happens yet.
@@ -196,14 +215,15 @@ public/images/
 
 ## Next Phase
 
-Phase 3 should implement:
+Phase 5 should implement:
 
-- Supabase Auth sign up, sign in, and sign out
-- protected app routes
-- profile bootstrap validation
-- authenticated layout/data loading
-- user isolation checks against Phase 2 schema
-- session-safe redirects
+- composer text input
+- media upload to Supabase Storage
+- media metadata extraction and validation
+- platform selector
+- platform-aware warnings
+- draft save
+- post now / schedule controls
 
 ## Documentation Maintenance Rules
 
@@ -223,3 +243,5 @@ Phase 3 should implement:
 - Retired the old Express/EJS/static prototype files from the active source tree.
 - Added `.env.example`, health route, creator dashboard shell, env validation, Supabase boundaries, fetch utility, and server-only publishing readiness scaffold.
 - Completed Phase 2 in source by adding Supabase schema migration, RLS policies, private storage bucket rules, ownership smoke test SQL, database types, and schema verification script.
+- Completed Phase 3 in source by adding Supabase Auth server actions, auth forms, protected dashboard route, profile bootstrap repair, sign out, and route smoke tests.
+- Completed Phase 4 in source by adding dashboard summary queries, authenticated dashboard summary API, React Query dashboard hook, focused realtime invalidation, realtime publication migration, and generated local `TOKEN_ENCRYPTION_KEY`.

@@ -2,23 +2,14 @@
 
 import { useQuery } from "@tanstack/react-query";
 
-type DashboardSummary = {
-  currentStreak: number;
-  postsThisWeek: number;
-  scheduledPosts: number;
-  connectedPlatforms: number;
-};
+import { apiFetch } from "@/lib/fetch/api-client";
+import type { DashboardSummary } from "@/types/dashboard";
 
-const phaseOneSummary: DashboardSummary = {
-  currentStreak: 7,
-  postsThisWeek: 4,
-  scheduledPosts: 3,
-  connectedPlatforms: 0,
-};
-
-export function useDashboardSummary() {
+export function useDashboardSummary(initialData: DashboardSummary) {
   return useQuery({
-    queryKey: ["dashboard-summary", "phase-1"],
-    queryFn: async () => phaseOneSummary,
+    queryKey: ["dashboard-summary"],
+    queryFn: () => apiFetch<DashboardSummary>("/api/dashboard/summary"),
+    initialData,
+    staleTime: 15_000,
   });
 }

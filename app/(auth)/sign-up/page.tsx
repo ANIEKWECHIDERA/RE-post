@@ -1,37 +1,35 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { AuthCardShell } from "@/components/auth/auth-card-shell";
+import { AuthForm } from "@/components/auth/auth-form";
 import { isSupabaseConfigured } from "@/lib/env/public";
+import { signUpAction } from "@/server/auth/actions";
+import { getCurrentUser } from "@/server/auth/session";
 
-export default function SignUpPage() {
+export default async function SignUpPage() {
   const supabaseReady = isSupabaseConfigured();
+  const user = await getCurrentUser();
+
+  if (user) {
+    redirect("/dashboard");
+  }
 
   return (
-    <main className="flex min-h-screen items-center justify-center px-5">
-      <Card className="w-full max-w-md rounded-lg shadow-soft">
-        <CardHeader>
-          <CardTitle>Start the streak</CardTitle>
-          <CardDescription>
-            Phase 1 keeps this safe and non-functional until Supabase Auth is wired in Phase 3.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="grid gap-4">
-          <Input disabled placeholder="Creator name" />
-          <Input disabled placeholder="creator@example.com" type="email" />
-          <Input disabled placeholder="Password" type="password" />
-          <Button disabled={!supabaseReady} className="rounded-md">
-            {supabaseReady ? "Create account" : "Add Supabase env first"}
-          </Button>
-          <p className="text-sm text-muted-foreground">
-            Already posting?{" "}
-            <Link className="font-medium text-primary" href="/sign-in">
-              Sign in
-            </Link>
-          </p>
-        </CardContent>
-      </Card>
-    </main>
+    <AuthCardShell
+      description="Create the workspace that will hold your streaks, scheduled posts, media, and publishing history."
+      footer={
+        <>
+          Already posting?{" "}
+          <Link className="font-medium text-primary" href="/sign-in">
+            Sign in
+          </Link>
+        </>
+      }
+      supabaseReady={supabaseReady}
+      title="Start the streak"
+    >
+      <AuthForm action={signUpAction} disabled={!supabaseReady} mode="sign-up" />
+    </AuthCardShell>
   );
 }

@@ -1,36 +1,35 @@
 import Link from "next/link";
+import { redirect } from "next/navigation";
 
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
+import { AuthCardShell } from "@/components/auth/auth-card-shell";
+import { AuthForm } from "@/components/auth/auth-form";
 import { isSupabaseConfigured } from "@/lib/env/public";
+import { signInAction } from "@/server/auth/actions";
+import { getCurrentUser } from "@/server/auth/session";
 
-export default function SignInPage() {
+export default async function SignInPage() {
   const supabaseReady = isSupabaseConfigured();
+  const user = await getCurrentUser();
+
+  if (user) {
+    redirect("/dashboard");
+  }
 
   return (
-    <main className="flex min-h-screen items-center justify-center px-5">
-      <Card className="w-full max-w-md rounded-lg shadow-soft">
-        <CardHeader>
-          <CardTitle>Welcome back</CardTitle>
-          <CardDescription>
-            Auth UI is scaffolded in Phase 1. Phase 3 will connect Supabase Auth actions and protected routes.
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="grid gap-4">
-          <Input disabled placeholder="creator@example.com" type="email" />
-          <Input disabled placeholder="Password" type="password" />
-          <Button disabled={!supabaseReady} className="rounded-md">
-            {supabaseReady ? "Sign in" : "Add Supabase env first"}
-          </Button>
-          <p className="text-sm text-muted-foreground">
-            New here?{" "}
-            <Link className="font-medium text-primary" href="/sign-up">
-              Create an account
-            </Link>
-          </p>
-        </CardContent>
-      </Card>
-    </main>
+    <AuthCardShell
+      description="Sign in to manage your creator streak, scheduled posts, and publishing queue."
+      footer={
+        <>
+          New here?{" "}
+          <Link className="font-medium text-primary" href="/sign-up">
+            Create an account
+          </Link>
+        </>
+      }
+      supabaseReady={supabaseReady}
+      title="Welcome back"
+    >
+      <AuthForm action={signInAction} disabled={!supabaseReady} mode="sign-in" />
+    </AuthCardShell>
   );
 }

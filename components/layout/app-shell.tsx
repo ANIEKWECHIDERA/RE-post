@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
+import { signOutAction } from "@/server/auth/actions";
 
 const navItems = [
   { label: "Home", icon: Home, active: true },
@@ -14,7 +15,16 @@ const navItems = [
   { label: "Analytics", icon: BarChart3, active: false },
 ];
 
-export function AppShell({ children }: { children: React.ReactNode }) {
+export function AppShell({
+  children,
+  currentUser,
+}: {
+  children: React.ReactNode;
+  currentUser: {
+    email: string;
+    displayName: string;
+  };
+}) {
   return (
     <div className="min-h-screen bg-background">
       <aside className="fixed inset-y-0 left-0 hidden w-72 border-r bg-card px-5 py-6 lg:block">
@@ -63,11 +73,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
               <h1 className="text-xl font-semibold">Creator Home</h1>
             </div>
             <div className="flex items-center gap-3">
-              <Button variant="outline" className="hidden rounded-md sm:inline-flex">
-                View plan
-              </Button>
+              <form action={signOutAction}>
+                <Button variant="outline" className="hidden rounded-md sm:inline-flex" type="submit">
+                  Sign out
+                </Button>
+              </form>
               <Avatar className="h-9 w-9 rounded-md">
-                <AvatarFallback className="rounded-md bg-accent text-accent-foreground">RP</AvatarFallback>
+                <AvatarFallback className="rounded-md bg-accent text-accent-foreground">
+                  {getInitials(currentUser.displayName, currentUser.email)}
+                </AvatarFallback>
               </Avatar>
             </div>
           </div>
@@ -76,4 +90,15 @@ export function AppShell({ children }: { children: React.ReactNode }) {
       </div>
     </div>
   );
+}
+
+function getInitials(displayName: string, email: string) {
+  const source = displayName.trim() || email;
+  const parts = source.split(/\s+/).filter(Boolean);
+
+  if (parts.length >= 2) {
+    return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+  }
+
+  return source.slice(0, 2).toUpperCase();
 }

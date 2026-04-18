@@ -6,13 +6,13 @@ import {
   Camera,
   CalendarClock,
   Flame,
+  type LucideIcon,
   Radio,
   Send,
   Sparkles,
 } from "lucide-react";
 import Image from "next/image";
 
-import { AppShell } from "@/components/layout/app-shell";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -24,28 +24,46 @@ import {
 } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
+import { useDashboardRealtime } from "@/hooks/use-dashboard-realtime";
 import { useDashboardSummary } from "@/hooks/use-dashboard-summary";
 import { isSupabaseConfigured } from "@/lib/env/public";
+import type { DashboardSummary } from "@/types/dashboard";
 
-const activityItems = [
-  { label: "Phase 1 foundation started", tone: "bg-emerald-500" },
-  { label: "Publishing engine planned around jobs", tone: "bg-cyan-500" },
-  { label: "Streak rules drafted for creator consistency", tone: "bg-rose-500" },
+const emptyActivityItems = [
+  {
+    id: "empty-1",
+    title: "No activity yet",
+    message: "Your publish wins, uploads, retries, and streak updates will land here.",
+    tone: "bg-emerald-500",
+  },
+  {
+    id: "empty-2",
+    title: "Realtime is ready",
+    message: "Once Supabase is configured, dashboard updates will refresh without a manual reload.",
+    tone: "bg-cyan-500",
+  },
 ];
 
-export function CreatorDashboard() {
-  const { data, isLoading } = useDashboardSummary();
+export function CreatorDashboard({
+  initialSummary,
+  userId,
+}: {
+  initialSummary: DashboardSummary;
+  userId: string | null;
+}) {
+  const { data, isLoading } = useDashboardSummary(initialSummary);
   const supabaseReady = isSupabaseConfigured();
+  useDashboardRealtime({ enabled: supabaseReady, userId });
+  const realtimeStatus = supabaseReady && userId ? "listening" : "waiting";
 
   return (
-    <AppShell>
-      <section className="grid gap-6">
+    <section className="grid gap-6">
         <div className="grid gap-4 lg:grid-cols-[1fr_360px]">
           <Card className="overflow-hidden rounded-lg border bg-card shadow-soft">
             <CardHeader className="grid gap-4 md:grid-cols-[1fr_120px] md:items-center">
               <div>
                 <Badge variant="outline" className="w-fit rounded-md border-primary/30 text-primary">
-                  RE-post v2 foundation
+                  Creator home
                 </Badge>
                 <CardTitle className="mt-4 text-3xl font-semibold tracking-normal md:text-5xl">
                   Keep the streak alive.
@@ -80,7 +98,7 @@ export function CreatorDashboard() {
                 <Radio className="h-5 w-5 text-accent" />
                 System status
               </CardTitle>
-              <CardDescription>Phase 1 is live UI and architecture scaffolding.</CardDescription>
+              <CardDescription>Dashboard data now reads through the authenticated Supabase boundary.</CardDescription>
             </CardHeader>
             <CardContent className="grid gap-3 text-sm">
               <div className="flex items-center justify-between">
@@ -98,15 +116,22 @@ export function CreatorDashboard() {
               <div className="flex items-center justify-between">
                 <span>Realtime</span>
                 <Badge variant="outline" className="rounded-md">
-                  planned
+                  {realtimeStatus}
+                </Badge>
+              </div>
+              <div className="flex items-center justify-between">
+                <span>Data source</span>
+                <Badge variant={data.loadedFromSupabase ? "default" : "secondary"} className="rounded-md">
+                  {data.loadedFromSupabase ? "Supabase" : "empty"}
                 </Badge>
               </div>
             </CardContent>
           </Card>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
           <MetricCard icon={Flame} label="Current streak" value={isLoading ? "--" : `${data?.currentStreak ?? 0} days`} />
+          <MetricCard icon={Flame} label="Best streak" value={isLoading ? "--" : `${data?.longestStreak ?? 0} days`} />
           <MetricCard icon={Sparkles} label="Posts this week" value={isLoading ? "--" : `${data?.postsThisWeek ?? 0}`} />
           <MetricCard icon={CalendarClock} label="Scheduled" value={isLoading ? "--" : `${data?.scheduledPosts ?? 0}`} />
           <MetricCard icon={Activity} label="Connected" value={isLoading ? "--" : `${data?.connectedPlatforms ?? 0}/3`} />
@@ -117,7 +142,7 @@ export function CreatorDashboard() {
             <CardHeader>
               <CardTitle>Composer preview</CardTitle>
               <CardDescription>
-                This is the Phase 1 shell. Phase 5 will connect uploads, validation, scheduling, and draft persistence.
+                Phase 5 will connect uploads, validation, scheduling, and draft persistence.
               </CardDescription>
             </CardHeader>
             <CardContent className="grid gap-4">
@@ -145,16 +170,24 @@ export function CreatorDashboard() {
           <Card className="rounded-lg border bg-card shadow-soft">
             <CardHeader>
               <CardTitle>Recent activity</CardTitle>
-              <CardDescription>Realtime events will land here after the schema phase.</CardDescription>
+              <CardDescription>High-signal events refresh live when Supabase Realtime is connected.</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="grid gap-4">
-                {activityItems.map((item, index) => (
-                  <div key={item.label} className="grid grid-cols-[12px_1fr] gap-3">
+                {(data.recentActivity.length > 0
+                  ? data.recentActivity.map((item) => ({
+                      id: item.id,
+                      title: item.title,
+                      message: item.message ?? formatActivityDate(item.createdAt),
+                      tone: "bg-primary",
+                    }))
+                  : emptyActivityItems
+                ).map((item) => (
+                  <div key={item.id} className="grid grid-cols-[12px_1fr] gap-3">
                     <span className={`mt-1.5 h-2.5 w-2.5 rounded-full ${item.tone}`} />
                     <div>
-                      <p className="text-sm font-medium">{item.label}</p>
-                      <p className="text-xs text-muted-foreground">Phase 1 checkpoint {index + 1}</p>
+                      <p className="text-sm font-medium">{item.title}</p>
+                      <p className="text-xs text-muted-foreground">{item.message}</p>
                     </div>
                   </div>
                 ))}
@@ -166,9 +199,15 @@ export function CreatorDashboard() {
             </CardContent>
           </Card>
         </div>
-      </section>
-    </AppShell>
+    </section>
   );
+}
+
+function formatActivityDate(value: string) {
+  return new Intl.DateTimeFormat(undefined, {
+    dateStyle: "medium",
+    timeStyle: "short",
+  }).format(new Date(value));
 }
 
 function MetricCard({
@@ -176,7 +215,7 @@ function MetricCard({
   label,
   value,
 }: {
-  icon: typeof Flame;
+  icon: LucideIcon;
   label: string;
   value: string;
 }) {

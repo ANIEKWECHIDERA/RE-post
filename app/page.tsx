@@ -1,5 +1,5 @@
-import { CreatorDashboard } from "@/features/dashboard/components/creator-dashboard";
+import { redirect } from "next/navigation";
 
 export default function HomePage() {
-  return <CreatorDashboard />;
+  redirect("/dashboard");
 }

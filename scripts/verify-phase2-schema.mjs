@@ -2,7 +2,9 @@ import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 
 const migrationPath = resolve("supabase/migrations/202604180001_repost_v2_phase2_schema.sql");
+const realtimeMigrationPath = resolve("supabase/migrations/202604180002_repost_v2_phase4_realtime.sql");
 const sql = readFileSync(migrationPath, "utf8");
+const realtimeSql = readFileSync(realtimeMigrationPath, "utf8");
 
 const requiredTables = [
   "profiles",
@@ -71,6 +73,18 @@ if (!sql.includes("insert into storage.buckets")) {
 
 if (!sql.includes("create trigger on_auth_user_created")) {
   missing.push("trigger:on_auth_user_created");
+}
+
+for (const realtimeTable of [
+  "activity_events",
+  "streak_state",
+  "post_platform_targets",
+  "posts",
+  "social_connections",
+]) {
+  if (!realtimeSql.includes(`alter publication supabase_realtime add table public.${realtimeTable}`)) {
+    missing.push(`realtime:${realtimeTable}`);
+  }
 }
 
 if (missing.length > 0) {

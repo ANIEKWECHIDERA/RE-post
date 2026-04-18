@@ -1,0 +1,63 @@
+import 'server-only';
+
+import { getServerEnv } from '@/lib/env/server';
+import type { SocialPlatform } from '@/types/database';
+import { ProviderPublishError } from '@/server/publishing/errors';
+
+export type ProviderPublishInput = {
+  platform: SocialPlatform;
+  postId: string;
+  targetId: string;
+  body: string;
+  connection: {
+    id: string;
+    accessTokenCiphertext: string | null;
+    status: string;
+  } | null;
+};
+
+export type ProviderPublishResult = {
+  providerPublishId: string;
+  providerPermalink: string | null;
+  providerRequestId: string | null;
+};
+
+export async function publishToProvider(
+  input: ProviderPublishInput,
+): Promise<ProviderPublishResult> {
+  const env = getServerEnv();
+  const mode = env?.PUBLISH_PROVIDER_MODE ?? 'disabled';
+
+  if (!input.connection || input.connection.status !== 'active') {
+    throw new ProviderPublishError({
+      code: 'connection_missing',
+      message: `No active ${input.platform} connection is available.`,
+      retryable: false,
+    });
+  }
+
+  if (!input.connection.accessTokenCiphertext) {
+    throw new ProviderPublishError({
+      code: 'token_missing',
+      message: `The ${input.platform} connection has no encrypted access token.`,
+      retryable: false,
+    });
+  }
+
+  if (mode === 'mock') {
+    return {
+      providerPublishId: `mock_${input.platform}_${input.targetId}`,
+      providerPermalink: null,
+      providerRequestId: `mock_request_${input.postId}`,
+    };
+  }
+
+  // Real provider calls intentionally remain out of Phase 7 until OAuth callback
+  // exchange can create active connections with encrypted tokens. The engine is
+  // still useful now because it proves queue, attempt, retry, and status flow.
+  throw new ProviderPublishError({
+    code: 'provider_adapter_disabled',
+    message: `${input.platform} publishing is not enabled yet.`,
+    retryable: false,
+  });
+}

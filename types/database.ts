@@ -1,4 +1,10 @@
-export type Json = string | number | boolean | null | { [key: string]: Json | undefined } | Json[];
+export type Json =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: Json | undefined }
+  | Json[];
 
 type TableDefinition<Row, Insert = Row, Update = Partial<Insert>> = {
   Row: Row;
@@ -12,47 +18,69 @@ type TableDefinition<Row, Insert = Row, Update = Partial<Insert>> = {
   }>;
 };
 
-export type SocialPlatform = "linkedin" | "facebook" | "instagram";
-export type SocialConnectionStatus = "pending" | "active" | "expired" | "revoked" | "error";
-export type MediaKind = "image" | "video";
-export type MediaAssetStatus = "uploaded" | "processing" | "ready" | "rejected" | "deleted";
+export type SocialPlatform = 'linkedin' | 'facebook' | 'instagram';
+export type SocialConnectionStatus =
+  | 'pending'
+  | 'active'
+  | 'expired'
+  | 'revoked'
+  | 'error';
+export type MediaKind = 'image' | 'video';
+export type MediaAssetStatus =
+  | 'uploaded'
+  | 'processing'
+  | 'ready'
+  | 'rejected'
+  | 'deleted';
 export type PostStatus =
-  | "draft"
-  | "scheduled"
-  | "queued"
-  | "publishing"
-  | "published"
-  | "partially_failed"
-  | "failed"
-  | "canceled";
-export type ScheduleMode = "now" | "scheduled";
+  | 'draft'
+  | 'scheduled'
+  | 'queued'
+  | 'publishing'
+  | 'published'
+  | 'partially_failed'
+  | 'failed'
+  | 'canceled';
+export type ScheduleMode = 'now' | 'scheduled';
 export type PostTargetStatus =
-  | "draft"
-  | "pending"
-  | "queued"
-  | "publishing"
-  | "published"
-  | "failed"
-  | "retry_scheduled"
-  | "canceled";
-export type PublishJobStatus = "queued" | "claimed" | "running" | "succeeded" | "partially_failed" | "failed" | "canceled";
-export type PublishAttemptStatus = "started" | "succeeded" | "failed";
+  | 'draft'
+  | 'pending'
+  | 'queued'
+  | 'publishing'
+  | 'published'
+  | 'failed'
+  | 'retry_scheduled'
+  | 'canceled';
+export type PublishJobStatus =
+  | 'queued'
+  | 'claimed'
+  | 'running'
+  | 'succeeded'
+  | 'partially_failed'
+  | 'failed'
+  | 'canceled';
+export type PublishAttemptStatus = 'started' | 'succeeded' | 'failed';
 export type ActivityEventType =
-  | "profile_bootstrapped"
-  | "social_connection_created"
-  | "social_connection_updated"
-  | "media_uploaded"
-  | "media_validated"
-  | "post_created"
-  | "post_updated"
-  | "post_scheduled"
-  | "publish_queued"
-  | "publish_started"
-  | "publish_succeeded"
-  | "publish_failed"
-  | "retry_scheduled"
-  | "streak_updated";
-export type StreakEventType = "incremented" | "maintained" | "missed" | "recovered" | "reset";
+  | 'profile_bootstrapped'
+  | 'social_connection_created'
+  | 'social_connection_updated'
+  | 'media_uploaded'
+  | 'media_validated'
+  | 'post_created'
+  | 'post_updated'
+  | 'post_scheduled'
+  | 'publish_queued'
+  | 'publish_started'
+  | 'publish_succeeded'
+  | 'publish_failed'
+  | 'retry_scheduled'
+  | 'streak_updated';
+export type StreakEventType =
+  | 'incremented'
+  | 'maintained'
+  | 'missed'
+  | 'recovered'
+  | 'reset';
 
 type Timestamp = string;
 type Uuid = string;
@@ -481,6 +509,14 @@ export type Database = {
     };
     Views: Record<string, never>;
     Functions: {
+      claim_publish_jobs: {
+        Args: {
+          worker_id_input: string;
+          limit_input?: number;
+          lock_seconds_input?: number;
+        };
+        Returns: Database['public']['Tables']['publish_jobs']['Row'][];
+      };
       handle_new_user: {
         Args: Record<string, never>;
         Returns: unknown;

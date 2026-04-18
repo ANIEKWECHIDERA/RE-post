@@ -1,12 +1,12 @@
-import { NextResponse } from "next/server";
+import { NextResponse } from 'next/server';
 
-import { isSupabaseConfigured } from "@/lib/env/public";
+import { isSupabaseConfigured } from '@/lib/env/public';
 
 export function GET() {
   return NextResponse.json({
     ok: true,
-    app: "re-post-v2",
-    phase: 6,
+    app: 're-post-v2',
+    phase: 7,
     supabaseConfigured: isSupabaseConfigured(),
   });
 }

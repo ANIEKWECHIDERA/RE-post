@@ -1,9 +1,9 @@
-import "server-only";
+import 'server-only';
 
-import { z } from "zod";
+import { z } from 'zod';
 
-import { mediaMetadataSchema } from "@/schemas/media";
-import { composerDraftSchema } from "@/schemas/post";
+import { mediaMetadataSchema } from '@/schemas/media';
+import { composerDraftSchema } from '@/schemas/post';
 
 const publishReadinessSchema = z.object({
   draft: composerDraftSchema,
@@ -18,15 +18,15 @@ export function validatePublishReadiness(input: PublishReadinessInput) {
   if (!parsed.success) {
     return {
       ready: false,
-      issues: parsed.error.issues.map((issue) => issue.message),
+      issues: parsed.error.issues.map(issue => issue.message),
     };
   }
 
   // Publishing remains server-only because provider tokens, final payloads, and
-  // retry state must never be assembled in the browser. Phase 7 will replace
-  // this lightweight readiness check with the job-backed engine.
+  // retry state must never be assembled in the browser. The Phase 7 worker uses
+  // this same boundary and keeps provider execution out of client code.
   return {
     ready: true,
-    issues: parsed.data.media.flatMap((asset) => asset.warnings),
+    issues: parsed.data.media.flatMap(asset => asset.warnings),
   };
 }

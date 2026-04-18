@@ -1,41 +1,51 @@
-import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { readFileSync } from 'node:fs';
+import { resolve } from 'node:path';
 
-const migrationPath = resolve("supabase/migrations/202604180001_repost_v2_phase2_schema.sql");
-const realtimeMigrationPath = resolve("supabase/migrations/202604180002_repost_v2_phase4_realtime.sql");
-const connectionMigrationPath = resolve("supabase/migrations/202604190003_repost_v2_phase6_connection_oauth_states.sql");
-const sql = readFileSync(migrationPath, "utf8");
-const realtimeSql = readFileSync(realtimeMigrationPath, "utf8");
-const connectionSql = readFileSync(connectionMigrationPath, "utf8");
+const migrationPath = resolve(
+  'supabase/migrations/202604180001_repost_v2_phase2_schema.sql',
+);
+const realtimeMigrationPath = resolve(
+  'supabase/migrations/202604180002_repost_v2_phase4_realtime.sql',
+);
+const connectionMigrationPath = resolve(
+  'supabase/migrations/202604190003_repost_v2_phase6_connection_oauth_states.sql',
+);
+const publishingMigrationPath = resolve(
+  'supabase/migrations/202604190004_repost_v2_phase7_publish_claiming.sql',
+);
+const sql = readFileSync(migrationPath, 'utf8');
+const realtimeSql = readFileSync(realtimeMigrationPath, 'utf8');
+const connectionSql = readFileSync(connectionMigrationPath, 'utf8');
+const publishingSql = readFileSync(publishingMigrationPath, 'utf8');
 
 const requiredTables = [
-  "profiles",
-  "social_connections",
-  "media_assets",
-  "media_variants",
-  "posts",
-  "post_media_assets",
-  "post_platform_targets",
-  "publish_jobs",
-  "publish_attempts",
-  "activity_events",
-  "streak_state",
-  "streak_events",
-  "analytics_daily_rollups",
+  'profiles',
+  'social_connections',
+  'media_assets',
+  'media_variants',
+  'posts',
+  'post_media_assets',
+  'post_platform_targets',
+  'publish_jobs',
+  'publish_attempts',
+  'activity_events',
+  'streak_state',
+  'streak_events',
+  'analytics_daily_rollups',
 ];
 
 const requiredEnums = [
-  "social_platform",
-  "social_connection_status",
-  "media_kind",
-  "media_asset_status",
-  "post_status",
-  "schedule_mode",
-  "post_target_status",
-  "publish_job_status",
-  "publish_attempt_status",
-  "activity_event_type",
-  "streak_event_type",
+  'social_platform',
+  'social_connection_status',
+  'media_kind',
+  'media_asset_status',
+  'post_status',
+  'schedule_mode',
+  'post_target_status',
+  'publish_job_status',
+  'publish_attempt_status',
+  'activity_event_type',
+  'streak_event_type',
 ];
 
 const missing = [];
@@ -57,10 +67,10 @@ for (const enumName of requiredEnums) {
 }
 
 const storagePolicies = [
-  "post_media_objects_select_own",
-  "post_media_objects_insert_own",
-  "post_media_objects_update_own",
-  "post_media_objects_delete_own",
+  'post_media_objects_select_own',
+  'post_media_objects_insert_own',
+  'post_media_objects_update_own',
+  'post_media_objects_delete_own',
 ];
 
 for (const policy of storagePolicies) {
@@ -69,38 +79,54 @@ for (const policy of storagePolicies) {
   }
 }
 
-if (!sql.includes("insert into storage.buckets")) {
-  missing.push("storage-bucket:post-media");
+if (!sql.includes('insert into storage.buckets')) {
+  missing.push('storage-bucket:post-media');
 }
 
-if (!sql.includes("create trigger on_auth_user_created")) {
-  missing.push("trigger:on_auth_user_created");
+if (!sql.includes('create trigger on_auth_user_created')) {
+  missing.push('trigger:on_auth_user_created');
 }
 
-if (!connectionSql.includes("create table public.connection_oauth_states")) {
-  missing.push("table:connection_oauth_states");
+if (!connectionSql.includes('create table public.connection_oauth_states')) {
+  missing.push('table:connection_oauth_states');
 }
 
-if (!connectionSql.includes("alter table public.connection_oauth_states enable row level security")) {
-  missing.push("rls:connection_oauth_states");
+if (
+  !connectionSql.includes(
+    'alter table public.connection_oauth_states enable row level security',
+  )
+) {
+  missing.push('rls:connection_oauth_states');
+}
+
+if (
+  !publishingSql.includes(
+    'create or replace function public.claim_publish_jobs',
+  )
+) {
+  missing.push('function:claim_publish_jobs');
 }
 
 for (const realtimeTable of [
-  "activity_events",
-  "streak_state",
-  "post_platform_targets",
-  "posts",
-  "social_connections",
+  'activity_events',
+  'streak_state',
+  'post_platform_targets',
+  'posts',
+  'social_connections',
 ]) {
-  if (!realtimeSql.includes(`alter publication supabase_realtime add table public.${realtimeTable}`)) {
+  if (
+    !realtimeSql.includes(
+      `alter publication supabase_realtime add table public.${realtimeTable}`,
+    )
+  ) {
     missing.push(`realtime:${realtimeTable}`);
   }
 }
 
 if (missing.length > 0) {
-  console.error("Phase 2 schema verification failed.");
-  console.error(missing.join("\n"));
+  console.error('Phase 2 schema verification failed.');
+  console.error(missing.join('\n'));
   process.exit(1);
 }
 
-console.log("Phase 2 schema verification passed.");
+console.log('Phase 2 schema verification passed.');

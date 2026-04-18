@@ -1,6 +1,6 @@
 # RE-post Project Context
 
-Last updated: 2026-04-18
+Last updated: 2026-04-19
 
 This is the living technical context document for RE-post. Update it on every meaningful iteration so a developer or coding agent can understand the project without rediscovering the codebase.
 
@@ -19,6 +19,7 @@ Current completed phases:
 - Phase 4: Supabase-backed dashboard data path and realtime home scaffolding. See `docs/REPOST_V2_PHASE4.md`.
 - Phase 5: Post Composer v2 with media validation, storage upload path, targets, and publish job creation. See `docs/REPOST_V2_PHASE5.md`.
 - Phase 6: Social connection architecture, token encryption, and OAuth state scaffolding. See `docs/REPOST_V2_PHASE6.md`.
+- Phase 7: Backend-controlled publishing engine, worker route, job claiming, attempts, retries, and provider adapter boundary. See `docs/REPOST_V2_PHASE7.md`.
 
 ## Product Direction
 
@@ -115,6 +116,8 @@ FACEBOOK_CLIENT_ID=
 FACEBOOK_CLIENT_SECRET=
 INSTAGRAM_CLIENT_ID=
 INSTAGRAM_CLIENT_SECRET=
+PUBLISH_WORKER_SECRET=
+PUBLISH_PROVIDER_MODE=disabled
 ```
 
 Notes:
@@ -123,6 +126,8 @@ Notes:
 - `/api/health` returns `supabaseConfigured: false` until public Supabase env vars are present.
 - `SUPABASE_SERVICE_ROLE_KEY` must only be used in server-only contexts.
 - `TOKEN_ENCRYPTION_KEY` is reserved for future third-party token encryption.
+- `PUBLISH_WORKER_SECRET` protects the server-side publish worker endpoint.
+- `PUBLISH_PROVIDER_MODE=disabled` is the safe default; use `mock` only for engine flow testing.
 
 ## Active Structure
 
@@ -179,9 +184,13 @@ public/images/
 - `lib/errors/app-error.ts`: Shared error normalization.
 - `lib/supabase/client.ts`: Browser Supabase client factory.
 - `lib/supabase/server.ts`: Server Supabase client factory.
+- `lib/supabase/admin.ts`: Server-only Supabase service-role client for worker code.
 - `lib/supabase/middleware.ts`: Supabase session refresh helper.
 - `proxy.ts`: Next.js 16 request proxy for session refresh.
 - `server/publishing/readiness.ts`: Server-only publishing readiness scaffold.
+- `server/publishing/engine.ts`: Phase 7 job-backed publishing engine.
+- `server/publishing/provider-adapters.ts`: Provider adapter boundary with disabled/mock modes.
+- `server/publishing/errors.ts`: Normalized provider error types.
 - `server/auth/actions.ts`: Sign up, sign in, and sign out server actions.
 - `server/auth/session.ts`: Server-side user lookup.
 - `server/profiles/bootstrap.ts`: Profile/streak bootstrap repair helper.
@@ -189,6 +198,7 @@ public/images/
 - `app/api/dashboard/summary/route.ts`: Authenticated dashboard summary endpoint.
 - `hooks/use-dashboard-summary.ts`: TanStack Query dashboard summary hook.
 - `hooks/use-dashboard-realtime.ts`: Focused Supabase Realtime dashboard invalidation hook.
+- `app/api/publish/run/route.ts`: Secret-protected publishing worker endpoint.
 - `features/composer/components/post-composer.tsx`: Composer UI for text, platforms, media, timing, and warnings.
 - `features/composer/media-validation.ts`: Browser-side media metadata inspection and platform warning logic.
 - `server/composer/actions.ts`: Server action that creates posts, uploads media, creates platform targets, queues publish jobs, and logs activity.
@@ -199,6 +209,7 @@ public/images/
 - `supabase/migrations/202604180001_repost_v2_phase2_schema.sql`: Phase 2 schema/RLS/storage migration.
 - `supabase/migrations/202604180002_repost_v2_phase4_realtime.sql`: Realtime publication migration for dashboard tables.
 - `supabase/migrations/202604190003_repost_v2_phase6_connection_oauth_states.sql`: OAuth state/PKCE storage migration.
+- `supabase/migrations/202604190004_repost_v2_phase7_publish_claiming.sql`: Publish job claiming RPC with row locking.
 - `supabase/tests/phase2_rls_smoke.sql`: Ownership/RLS smoke test for a real Supabase database.
 - `scripts/verify-phase2-schema.mjs`: Local schema coverage verifier.
 - `types/database.ts`: Manual Phase 2 Supabase database type surface.
@@ -209,6 +220,7 @@ public/images/
 - `docs/REPOST_V2_PHASE4.md`: Phase 4 dashboard/realtime implementation record.
 - `docs/REPOST_V2_PHASE5.md`: Phase 5 composer implementation record.
 - `docs/REPOST_V2_PHASE6.md`: Phase 6 social connections implementation record.
+- `docs/REPOST_V2_PHASE7.md`: Phase 7 publishing engine implementation record.
 
 ## Security Principles
 
@@ -230,21 +242,22 @@ public/images/
 - Realtime subscription code and publication migration are implemented, but live realtime verification needs an authenticated user and applied migrations.
 - Composer UI and media upload server action are implemented, but live persistence verification needs a linked Supabase project, applied migrations, and an authenticated user.
 - Social connection architecture is implemented, but provider redirect/callback token exchange is pending.
-- Publishing engine is scaffolded only; no provider publishing happens yet.
+- Publishing engine job processing is implemented, but real provider API calls are disabled until OAuth token exchange is complete.
+- `POST /api/publish/run` exists and requires `PUBLISH_WORKER_SECRET`; it is ready for cron/worker invocation after migrations are applied.
 - Supabase migration push is still blocked because the `SUPABASE_ACCESS_TOKEN` value in `.env` is not accepted by the Supabase CLI as a valid `sbp_...` personal access token.
-- Scheduling, streak calculation, activity events, and analytics are pending later phases.
+- Scheduling orchestration, streak calculation, richer activity events, and analytics are pending later phases.
 
 ## Next Phase
 
-Phase 7 should implement:
+Phase 8 should implement:
 
-- backend-controlled publishing engine
-- job claiming and locking
-- provider adapter interfaces
-- per-platform payload preparation
-- publish attempts and normalized errors
-- retry scheduling
-- status propagation
+- scheduling system
+- hosted worker/cron strategy
+- timezone-aware future execution
+- cancellation where possible
+- duplicate publish guards
+- safe reprocessing after worker failure
+- live migration verification once the Supabase token is valid
 
 ## Documentation Maintenance Rules
 
@@ -268,3 +281,9 @@ Phase 7 should implement:
 - Completed Phase 4 in source by adding dashboard summary queries, authenticated dashboard summary API, React Query dashboard hook, focused realtime invalidation, realtime publication migration, and generated local `TOKEN_ENCRYPTION_KEY`.
 - Completed Phase 5 in source by adding protected composer UI, media metadata inspection, platform-aware warnings, Supabase Storage upload action, post/target/job creation, and composer docs.
 - Completed Phase 6 in source by adding provider readiness UI, connection queries/actions, OAuth state migration, server-only token vault, and social connection docs.
+
+### 2026-04-19
+
+- Completed Phase 7 in source by adding service-role publishing engine code, publish job claiming migration, provider adapter boundary, normalized publish errors, secret-protected worker endpoint, worker env validation, and Phase 7 docs.
+- Attempted Supabase migration push again; it remains blocked because the current `SUPABASE_ACCESS_TOKEN` is not accepted by the Supabase CLI as a valid `sbp_...` personal access token.
+- Confirmed the Claude MCP command is not installed in this shell, so Supabase MCP push could not be used from this environment.

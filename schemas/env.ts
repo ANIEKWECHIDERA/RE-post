@@ -1,4 +1,4 @@
-import { z } from "zod";
+import { z } from 'zod';
 
 export const publicEnvSchema = z.object({
   NEXT_PUBLIC_SUPABASE_URL: z.string().url().optional(),
@@ -15,6 +15,8 @@ export const serverEnvSchema = publicEnvSchema.extend({
   FACEBOOK_CLIENT_SECRET: z.string().optional(),
   INSTAGRAM_CLIENT_ID: z.string().optional(),
   INSTAGRAM_CLIENT_SECRET: z.string().optional(),
+  PUBLISH_WORKER_SECRET: z.string().min(24).optional(),
+  PUBLISH_PROVIDER_MODE: z.enum(['disabled', 'mock']).optional(),
 });
 
 export type PublicEnv = z.infer<typeof publicEnvSchema>;

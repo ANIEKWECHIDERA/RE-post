@@ -1,6 +1,6 @@
-import "server-only";
+import 'server-only';
 
-import { serverEnvSchema } from "@/schemas/env";
+import { serverEnvSchema } from '@/schemas/env';
 
 export function getServerEnv() {
   const parsed = serverEnvSchema.safeParse({
@@ -15,6 +15,8 @@ export function getServerEnv() {
     FACEBOOK_CLIENT_SECRET: process.env.FACEBOOK_CLIENT_SECRET,
     INSTAGRAM_CLIENT_ID: process.env.INSTAGRAM_CLIENT_ID,
     INSTAGRAM_CLIENT_SECRET: process.env.INSTAGRAM_CLIENT_SECRET,
+    PUBLISH_WORKER_SECRET: process.env.PUBLISH_WORKER_SECRET,
+    PUBLISH_PROVIDER_MODE: process.env.PUBLISH_PROVIDER_MODE,
   });
 
   return parsed.success ? parsed.data : null;

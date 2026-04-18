@@ -1,3 +1,9 @@
 *.log
 .env
 uploads/
+node_modules/
+instagram-api-int/node_modules/
+.next/
+.vercel/
+*.tsbuildinfo
+node_modules

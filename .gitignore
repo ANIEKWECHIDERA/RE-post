@@ -7,3 +7,5 @@ instagram-api-int/node_modules/
 .vercel/
 *.tsbuildinfo
 node_modules
+.env.example
+.env

@@ -17,6 +17,7 @@ Current completed phases:
 - Phase 2: Supabase schema, RLS, storage policies, and database type surface. See `docs/REPOST_V2_PHASE2.md`.
 - Phase 3: Supabase Auth and protected user account system. See `docs/REPOST_V2_PHASE3.md`.
 - Phase 4: Supabase-backed dashboard data path and realtime home scaffolding. See `docs/REPOST_V2_PHASE4.md`.
+- Phase 5: Post Composer v2 with media validation, storage upload path, targets, and publish job creation. See `docs/REPOST_V2_PHASE5.md`.
 
 ## Product Direction
 
@@ -153,6 +154,7 @@ public/images/
 - `app/page.tsx`: Root entry route that redirects to `/dashboard`.
 - `app/(app)/layout.tsx`: Protected app route boundary.
 - `app/(app)/dashboard/page.tsx`: Authenticated dashboard page.
+- `app/(app)/compose/page.tsx`: Authenticated post composer page.
 - `app/(auth)/sign-in/page.tsx`: Sign-in route.
 - `app/(auth)/sign-up/page.tsx`: Sign-up route.
 - `components/layout/app-shell.tsx`: Main app shell/sidebar/header.
@@ -178,6 +180,9 @@ public/images/
 - `app/api/dashboard/summary/route.ts`: Authenticated dashboard summary endpoint.
 - `hooks/use-dashboard-summary.ts`: TanStack Query dashboard summary hook.
 - `hooks/use-dashboard-realtime.ts`: Focused Supabase Realtime dashboard invalidation hook.
+- `features/composer/components/post-composer.tsx`: Composer UI for text, platforms, media, timing, and warnings.
+- `features/composer/media-validation.ts`: Browser-side media metadata inspection and platform warning logic.
+- `server/composer/actions.ts`: Server action that creates posts, uploads media, creates platform targets, queues publish jobs, and logs activity.
 - `app/api/health/route.ts`: Health endpoint.
 - `supabase/migrations/202604180001_repost_v2_phase2_schema.sql`: Phase 2 schema/RLS/storage migration.
 - `supabase/migrations/202604180002_repost_v2_phase4_realtime.sql`: Realtime publication migration for dashboard tables.
@@ -189,6 +194,7 @@ public/images/
 - `docs/REPOST_V2_PHASE2.md`: Phase 2 schema implementation record.
 - `docs/REPOST_V2_PHASE3.md`: Phase 3 auth implementation record.
 - `docs/REPOST_V2_PHASE4.md`: Phase 4 dashboard/realtime implementation record.
+- `docs/REPOST_V2_PHASE5.md`: Phase 5 composer implementation record.
 
 ## Security Principles
 
@@ -208,22 +214,20 @@ public/images/
 - Auth routes and server actions are implemented, but live sign up/sign in requires Supabase env vars and the Phase 2 migration applied.
 - Dashboard data path is implemented, but unauthenticated smoke tests correctly return `401` for `/api/dashboard/summary`.
 - Realtime subscription code and publication migration are implemented, but live realtime verification needs an authenticated user and applied migrations.
-- Media upload is not implemented yet.
+- Composer UI and media upload server action are implemented, but live persistence verification needs a linked Supabase project, applied migrations, and an authenticated user.
 - Social connections are not implemented yet.
 - Publishing engine is scaffolded only; no provider publishing happens yet.
 - Scheduling, streak calculation, activity events, and analytics are pending later phases.
 
 ## Next Phase
 
-Phase 5 should implement:
+Phase 6 should implement:
 
-- composer text input
-- media upload to Supabase Storage
-- media metadata extraction and validation
-- platform selector
-- platform-aware warnings
-- draft save
-- post now / schedule controls
+- social connection records and UI
+- provider-specific connection scaffolding
+- secure third-party token handling architecture
+- OAuth live vs pending states
+- connection lifecycle validation
 
 ## Documentation Maintenance Rules
 
@@ -245,3 +249,4 @@ Phase 5 should implement:
 - Completed Phase 2 in source by adding Supabase schema migration, RLS policies, private storage bucket rules, ownership smoke test SQL, database types, and schema verification script.
 - Completed Phase 3 in source by adding Supabase Auth server actions, auth forms, protected dashboard route, profile bootstrap repair, sign out, and route smoke tests.
 - Completed Phase 4 in source by adding dashboard summary queries, authenticated dashboard summary API, React Query dashboard hook, focused realtime invalidation, realtime publication migration, and generated local `TOKEN_ENCRYPTION_KEY`.
+- Completed Phase 5 in source by adding protected composer UI, media metadata inspection, platform-aware warnings, Supabase Storage upload action, post/target/job creation, and composer docs.

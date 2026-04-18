@@ -22,3 +22,10 @@ export const composerDraftSchema = z
   });
 
 export type ComposerDraftInput = z.infer<typeof composerDraftSchema>;
+
+export const composerServerSchema = composerDraftSchema.extend({
+  timezone: z.string().trim().min(1).default("UTC"),
+  mediaMetadata: z.array(z.unknown()).default([]),
+});
+
+export type ComposerServerInput = z.infer<typeof composerServerSchema>;

@@ -12,6 +12,7 @@ import {
   Sparkles,
 } from "lucide-react";
 import Image from "next/image";
+import Link from "next/link";
 
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -81,9 +82,11 @@ export function CreatorDashboard({
               />
             </CardHeader>
             <CardContent className="flex flex-wrap gap-3">
-              <Button className="rounded-md">
-                <Send className="mr-2 h-4 w-4" />
-                Quick compose
+              <Button asChild className="rounded-md">
+                <Link href="/compose">
+                  <Send className="mr-2 h-4 w-4" />
+                  Quick compose
+                </Link>
               </Button>
               <Button variant="outline" className="rounded-md">
                 <CalendarClock className="mr-2 h-4 w-4" />

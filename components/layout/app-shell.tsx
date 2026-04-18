@@ -1,4 +1,5 @@
 import { BarChart3, CalendarDays, Home, Link2, PenSquare } from "lucide-react";
+import Link from "next/link";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -8,11 +9,11 @@ import { cn } from "@/lib/utils";
 import { signOutAction } from "@/server/auth/actions";
 
 const navItems = [
-  { label: "Home", icon: Home, active: true },
-  { label: "Compose", icon: PenSquare, active: false },
-  { label: "Schedule", icon: CalendarDays, active: false },
-  { label: "Connections", icon: Link2, active: false },
-  { label: "Analytics", icon: BarChart3, active: false },
+  { label: "Home", href: "/dashboard", icon: Home, active: true },
+  { label: "Compose", href: "/compose", icon: PenSquare, active: false },
+  { label: "Schedule", href: "/dashboard", icon: CalendarDays, active: false },
+  { label: "Connections", href: "/dashboard", icon: Link2, active: false },
+  { label: "Analytics", href: "/dashboard", icon: BarChart3, active: false },
 ];
 
 export function AppShell({
@@ -42,8 +43,9 @@ export function AppShell({
 
         <nav className="grid gap-2">
           {navItems.map((item) => (
-            <button
+            <Link
               key={item.label}
+              href={item.href}
               className={cn(
                 "flex items-center gap-3 rounded-md px-3 py-2 text-left text-sm transition-colors",
                 item.active
@@ -53,7 +55,7 @@ export function AppShell({
             >
               <item.icon className="h-4 w-4" />
               {item.label}
-            </button>
+            </Link>
           ))}
         </nav>
 

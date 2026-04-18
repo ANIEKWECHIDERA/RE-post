@@ -4,6 +4,20 @@ import { platformSchema } from "@/schemas/platform";
 
 export const mediaKindSchema = z.enum(["image", "video"]);
 
+export const acceptedMediaMimeTypes = [
+  "image/jpeg",
+  "image/png",
+  "image/webp",
+  "image/gif",
+  "video/mp4",
+  "video/quicktime",
+  "video/webm",
+] as const;
+
+export const acceptedMediaMimeTypeSchema = z.enum(acceptedMediaMimeTypes);
+
+export const maxMediaFileSize = 100 * 1024 * 1024;
+
 export const mediaMetadataSchema = z.object({
   id: z.string().uuid().optional(),
   fileName: z.string().min(1),

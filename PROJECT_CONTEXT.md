@@ -14,6 +14,7 @@ Current completed phases:
 
 - Phase 0: Discovery, cleanup, and architecture plan. See `docs/REPOST_V2_PHASE0.md`.
 - Phase 1: Next.js foundation and project setup. See `docs/REPOST_V2_PHASE1.md`.
+- Phase 2: Supabase schema, RLS, storage policies, and database type surface. See `docs/REPOST_V2_PHASE2.md`.
 
 ## Product Direction
 
@@ -86,11 +87,17 @@ Run typecheck and lint:
 npm run check
 ```
 
+Verify Phase 2 schema coverage:
+
+```bash
+npm run verify:schema
+```
+
 ## Environment Variables
 
 `.env` is ignored by git. Use `.env.example` as the safe template.
 
-Current Phase 1 variables:
+Current variables:
 
 ```text
 NEXT_PUBLIC_SUPABASE_URL=
@@ -127,8 +134,12 @@ lib/
 |-- fetch/
 `-- supabase/
 schemas/
+scripts/
 server/
 stores/
+supabase/
+|-- migrations/
+`-- tests/
 types/
 docs/
 public/images/
@@ -152,8 +163,13 @@ public/images/
 - `proxy.ts`: Next.js 16 request proxy for session refresh.
 - `server/publishing/readiness.ts`: Server-only publishing readiness scaffold.
 - `app/api/health/route.ts`: Health endpoint.
+- `supabase/migrations/202604180001_repost_v2_phase2_schema.sql`: Phase 2 schema/RLS/storage migration.
+- `supabase/tests/phase2_rls_smoke.sql`: Ownership/RLS smoke test for a real Supabase database.
+- `scripts/verify-phase2-schema.mjs`: Local schema coverage verifier.
+- `types/database.ts`: Manual Phase 2 Supabase database type surface.
 - `docs/REPOST_V2_PHASE0.md`: Architecture and migration plan.
 - `docs/REPOST_V2_PHASE1.md`: Phase 1 implementation record.
+- `docs/REPOST_V2_PHASE2.md`: Phase 2 schema implementation record.
 
 ## Security Principles
 
@@ -169,10 +185,10 @@ public/images/
 
 ## Current Known Limitations
 
-- Supabase schema and RLS are not implemented yet.
+- Supabase schema and RLS are implemented in source, but the migration has not been applied in this workspace because Docker is not installed and no hosted Supabase project is linked.
 - Auth UI is scaffolded but disabled until Phase 3.
 - Dashboard data is mocked in Phase 1.
-- Realtime subscriptions are not live yet because tables do not exist.
+- Realtime subscriptions are not live yet; Phase 2 creates the activity/streak/status tables in migration source, and Phase 4 will wire subscriptions after the schema is applied.
 - Media upload is not implemented yet.
 - Social connections are not implemented yet.
 - Publishing engine is scaffolded only; no provider publishing happens yet.
@@ -180,18 +196,14 @@ public/images/
 
 ## Next Phase
 
-Phase 2 should implement:
+Phase 3 should implement:
 
-- Supabase schema migrations
-- enums
-- tables
-- foreign keys
-- indexes
-- RLS policies
-- storage bucket policies
-- seed/test SQL where useful
-- database type generation strategy
-- ownership CRUD verification
+- Supabase Auth sign up, sign in, and sign out
+- protected app routes
+- profile bootstrap validation
+- authenticated layout/data loading
+- user isolation checks against Phase 2 schema
+- session-safe redirects
 
 ## Documentation Maintenance Rules
 
@@ -210,3 +222,4 @@ Phase 2 should implement:
 - Completed Phase 1 by converting the root app to Next.js + TypeScript + Tailwind + shadcn/ui + Zustand + TanStack Query + Supabase scaffolding.
 - Retired the old Express/EJS/static prototype files from the active source tree.
 - Added `.env.example`, health route, creator dashboard shell, env validation, Supabase boundaries, fetch utility, and server-only publishing readiness scaffold.
+- Completed Phase 2 in source by adding Supabase schema migration, RLS policies, private storage bucket rules, ownership smoke test SQL, database types, and schema verification script.

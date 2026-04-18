@@ -9,7 +9,8 @@
     "start": "next start",
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
-    "check": "npm run typecheck && npm run lint"
+    "check": "npm run typecheck && npm run lint",
+    "verify:schema": "node scripts/verify-phase2-schema.mjs"
   },
   "dependencies": {
     "@radix-ui/react-avatar": "^1.1.11",

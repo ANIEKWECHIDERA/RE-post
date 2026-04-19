@@ -27,6 +27,7 @@ Current completed phases:
 - Phase 12: QA, hardening, setup docs, advisor-driven indexes, final checks, and cleanup. See `docs/REPOST_V2_PHASE12.md`.
 - Navigation expansion Phase 1: Real Schedule, Analytics, and Drafts routes with Supabase-backed read paths. See `docs/REPOST_V2_NAV_PHASE1.md`.
 - Navigation expansion Phase 2: Draft save/edit/open/duplicate/delete lifecycle and Composer draft transitions. See `docs/REPOST_V2_NAV_PHASE2.md`.
+- Navigation expansion Phase 3: Scheduled post edit/reschedule/cancel/duplicate/delete lifecycle. See `docs/REPOST_V2_NAV_PHASE3.md`.
 
 ## Product Direction
 
@@ -271,6 +272,7 @@ public/images/
 - `docs/SETUP.md`: Current setup, environment, migration, worker, and limitation notes.
 - `docs/REPOST_V2_NAV_PHASE1.md`: Navigation expansion Phase 1 implementation record.
 - `docs/REPOST_V2_NAV_PHASE2.md`: Navigation expansion Phase 2 draft lifecycle implementation record.
+- `docs/REPOST_V2_NAV_PHASE3.md`: Navigation expansion Phase 3 scheduled-post lifecycle implementation record.
 
 ## Security Principles
 
@@ -353,3 +355,4 @@ Recommended next work:
 - Re-tested with Playwright MCP, fixed path-aware shell titles/navigation, pinned dashboard date formatting to avoid hydration mismatches, added the favicon metadata/asset, and hardened E2E waits for remote-backed dev runs.
 - Started the navigation expansion by adding real `/schedule`, `/analytics`, and `/drafts` routes with Supabase-backed query layers, API routes, React Query hooks, realtime invalidation, and route coverage in Playwright.
 - Completed navigation expansion Phase 2 by adding Composer draft saving, draft hydration through `/compose?draftId=...`, draft duplicate/delete actions, draft send/schedule transition support, and split Playwright E2E coverage for route/publish and draft lifecycle flows.
+- Completed navigation expansion Phase 3 by adding scheduled post edit, reschedule, cancel, duplicate-to-draft, terminal delete, date filters, cache refresh after scheduled mutations, and Playwright coverage for scheduled lifecycle.

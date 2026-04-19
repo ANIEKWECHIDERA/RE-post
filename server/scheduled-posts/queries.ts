@@ -25,7 +25,6 @@ export async function getScheduledPostsPageData(
     )
     .eq('user_id', userId)
     .eq('schedule_mode', 'scheduled')
-    .is('archived_at', null)
     .order('scheduled_at', { ascending: false })
     .limit(100);
 

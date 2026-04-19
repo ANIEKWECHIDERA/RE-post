@@ -20,6 +20,7 @@ Current completed phases:
 - Phase 5: Post Composer v2 with media validation, storage upload path, targets, and publish job creation. See `docs/REPOST_V2_PHASE5.md`.
 - Phase 6: Social connection architecture, token encryption, and OAuth state scaffolding. See `docs/REPOST_V2_PHASE6.md`.
 - Phase 7: Backend-controlled publishing engine, worker route, job claiming, attempts, retries, and provider adapter boundary. See `docs/REPOST_V2_PHASE7.md`.
+- Phase 8: Timezone-aware scheduling, cancelable scheduled queue, worker cron scaffold, and safe reprocessing guards. See `docs/REPOST_V2_PHASE8.md`.
 
 ## Product Direction
 
@@ -117,6 +118,7 @@ FACEBOOK_CLIENT_SECRET=
 INSTAGRAM_CLIENT_ID=
 INSTAGRAM_CLIENT_SECRET=
 PUBLISH_WORKER_SECRET=
+PUBLISH_WORKER_URL=
 PUBLISH_PROVIDER_MODE=disabled
 ```
 
@@ -127,6 +129,7 @@ Notes:
 - `SUPABASE_SERVICE_ROLE_KEY` must only be used in server-only contexts.
 - `TOKEN_ENCRYPTION_KEY` is reserved for future third-party token encryption.
 - `PUBLISH_WORKER_SECRET` protects the server-side publish worker endpoint.
+- `PUBLISH_WORKER_URL` is used by the optional Supabase Edge Function cron target.
 - `PUBLISH_PROVIDER_MODE=disabled` is the safe default; use `mock` only for engine flow testing.
 
 ## Active Structure
@@ -179,6 +182,7 @@ public/images/
 - `stores/composer-store.ts`: Zustand composer UI store.
 - `schemas/env.ts`: Zod env schemas.
 - `schemas/post.ts`: Composer draft validation schema.
+- `schemas/scheduling.ts`: Scheduled-post cancellation validation schema.
 - `schemas/media.ts`: Media metadata schema and platform media target constants.
 - `lib/fetch/api-client.ts`: Fetch-only API helper.
 - `lib/errors/app-error.ts`: Shared error normalization.
@@ -191,6 +195,8 @@ public/images/
 - `server/publishing/engine.ts`: Phase 7 job-backed publishing engine.
 - `server/publishing/provider-adapters.ts`: Provider adapter boundary with disabled/mock modes.
 - `server/publishing/errors.ts`: Normalized provider error types.
+- `server/scheduling/time.ts`: IANA timezone-aware wall-clock to UTC conversion.
+- `server/scheduling/actions.ts`: Scheduled-post cancellation server action.
 - `server/auth/actions.ts`: Sign up, sign in, and sign out server actions.
 - `server/auth/session.ts`: Server-side user lookup.
 - `server/profiles/bootstrap.ts`: Profile/streak bootstrap repair helper.
@@ -210,6 +216,8 @@ public/images/
 - `supabase/migrations/202604180002_repost_v2_phase4_realtime.sql`: Realtime publication migration for dashboard tables.
 - `supabase/migrations/202604190003_repost_v2_phase6_connection_oauth_states.sql`: OAuth state/PKCE storage migration.
 - `supabase/migrations/202604190004_repost_v2_phase7_publish_claiming.sql`: Publish job claiming RPC with row locking.
+- `supabase/migrations/202604190005_repost_v2_phase8_scheduling.sql`: Scheduled-post cancellation function and scheduler indexes.
+- `supabase/functions/publish-worker/index.ts`: Optional Supabase Edge Function cron target that forwards to the Next.js worker.
 - `supabase/tests/phase2_rls_smoke.sql`: Ownership/RLS smoke test for a real Supabase database.
 - `scripts/verify-phase2-schema.mjs`: Local schema coverage verifier.
 - `types/database.ts`: Manual Phase 2 Supabase database type surface.
@@ -221,6 +229,7 @@ public/images/
 - `docs/REPOST_V2_PHASE5.md`: Phase 5 composer implementation record.
 - `docs/REPOST_V2_PHASE6.md`: Phase 6 social connections implementation record.
 - `docs/REPOST_V2_PHASE7.md`: Phase 7 publishing engine implementation record.
+- `docs/REPOST_V2_PHASE8.md`: Phase 8 scheduling implementation record.
 
 ## Security Principles
 
@@ -244,20 +253,21 @@ public/images/
 - Social connection architecture is implemented, but provider redirect/callback token exchange is pending.
 - Publishing engine job processing is implemented, but real provider API calls are disabled until OAuth token exchange is complete.
 - `POST /api/publish/run` exists and requires `PUBLISH_WORKER_SECRET`; it is ready for cron/worker invocation after migrations are applied.
+- Scheduling is implemented in source with timezone-aware conversion and cancellation, but live verification needs migrations applied.
+- Codex Supabase MCP is configured and OAuth-authenticated globally, but this running tool session does not expose Supabase MCP tools until a new session/runtime loads the server.
 - Supabase migration push is still blocked because the `SUPABASE_ACCESS_TOKEN` value in `.env` is not accepted by the Supabase CLI as a valid `sbp_...` personal access token.
-- Scheduling orchestration, streak calculation, richer activity events, and analytics are pending later phases.
+- Streak calculation, richer activity events, and analytics are pending later phases.
 
 ## Next Phase
 
-Phase 8 should implement:
+Phase 9 should implement:
 
-- scheduling system
-- hosted worker/cron strategy
-- timezone-aware future execution
-- cancellation where possible
-- duplicate publish guards
-- safe reprocessing after worker failure
-- live migration verification once the Supabase token is valid
+- streak business rules
+- successful publish event handling
+- daily boundary logic by creator timezone
+- streak state updates
+- realtime streak activity
+- missed-day and recovery UX states
 
 ## Documentation Maintenance Rules
 
@@ -287,3 +297,5 @@ Phase 8 should implement:
 - Completed Phase 7 in source by adding service-role publishing engine code, publish job claiming migration, provider adapter boundary, normalized publish errors, secret-protected worker endpoint, worker env validation, and Phase 7 docs.
 - Attempted Supabase migration push again; it remains blocked because the current `SUPABASE_ACCESS_TOKEN` is not accepted by the Supabase CLI as a valid `sbp_...` personal access token.
 - Confirmed the Claude MCP command is not installed in this shell, so Supabase MCP push could not be used from this environment.
+- Completed Phase 8 in source by adding timezone-aware scheduled time conversion, cancelable scheduled queue UI, cancellation RPC/action, scheduler Edge Function scaffold, worker publishability guard, scheduler indexes, and Phase 8 docs.
+- Added and authenticated the Codex Supabase MCP server globally; current session visibility still requires a reload before Supabase MCP tools appear to this agent runtime.

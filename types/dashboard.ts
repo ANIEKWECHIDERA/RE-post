@@ -1,4 +1,8 @@
-import type { ActivityEventType } from "@/types/database";
+import type {
+  ActivityEventType,
+  PostStatus,
+  SocialPlatform,
+} from '@/types/database';
 
 export type DashboardActivityItem = {
   id: string;
@@ -8,6 +12,15 @@ export type DashboardActivityItem = {
   createdAt: string;
 };
 
+export type ScheduledPostQueueItem = {
+  id: string;
+  bodyPreview: string;
+  scheduledAt: string;
+  timezone: string;
+  status: PostStatus;
+  platforms: SocialPlatform[];
+};
+
 export type DashboardSummary = {
   currentStreak: number;
   longestStreak: number;
@@ -15,5 +28,6 @@ export type DashboardSummary = {
   scheduledPosts: number;
   connectedPlatforms: number;
   recentActivity: DashboardActivityItem[];
+  scheduledQueue: ScheduledPostQueueItem[];
   loadedFromSupabase: boolean;
 };

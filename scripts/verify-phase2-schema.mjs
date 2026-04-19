@@ -13,10 +13,14 @@ const connectionMigrationPath = resolve(
 const publishingMigrationPath = resolve(
   'supabase/migrations/202604190004_repost_v2_phase7_publish_claiming.sql',
 );
+const schedulingMigrationPath = resolve(
+  'supabase/migrations/202604190005_repost_v2_phase8_scheduling.sql',
+);
 const sql = readFileSync(migrationPath, 'utf8');
 const realtimeSql = readFileSync(realtimeMigrationPath, 'utf8');
 const connectionSql = readFileSync(connectionMigrationPath, 'utf8');
 const publishingSql = readFileSync(publishingMigrationPath, 'utf8');
+const schedulingSql = readFileSync(schedulingMigrationPath, 'utf8');
 
 const requiredTables = [
   'profiles',
@@ -107,6 +111,18 @@ if (
   missing.push('function:claim_publish_jobs');
 }
 
+if (
+  !schedulingSql.includes(
+    'create or replace function public.cancel_scheduled_post',
+  )
+) {
+  missing.push('function:cancel_scheduled_post');
+}
+
+if (!schedulingSql.includes('publish_jobs_worker_recovery_idx')) {
+  missing.push('index:publish_jobs_worker_recovery_idx');
+}
+
 for (const realtimeTable of [
   'activity_events',
   'streak_state',
@@ -124,9 +140,9 @@ for (const realtimeTable of [
 }
 
 if (missing.length > 0) {
-  console.error('Phase 2 schema verification failed.');
+  console.error('Schema verification failed.');
   console.error(missing.join('\n'));
   process.exit(1);
 }
 
-console.log('Phase 2 schema verification passed.');
+console.log('Schema verification passed.');

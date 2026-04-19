@@ -13,6 +13,10 @@ import {
 import { composerServerSchema } from '@/schemas/post';
 import type { Platform } from '@/schemas/platform';
 import { getCurrentUser } from '@/server/auth/session';
+import {
+  isAtLeastOneMinuteInFuture,
+  parseCreatorScheduledTime,
+} from '@/server/scheduling/time';
 import type { PostTargetStatus } from '@/types/database';
 
 export type ComposerActionState = {
@@ -41,10 +45,32 @@ export async function createComposerPostAction(
   const platforms = formData.getAll('platforms').map(String);
   const scheduleMode = String(formData.get('scheduleMode') ?? 'now');
   const rawScheduledAt = formData.get('scheduledAt');
+  const timezone = String(formData.get('timezone') || 'UTC');
+  const parsedScheduledTime =
+    scheduleMode === 'scheduled'
+      ? parseCreatorScheduledTime(
+          typeof rawScheduledAt === 'string' ? rawScheduledAt : null,
+          timezone,
+        )
+      : null;
+
+  if (parsedScheduledTime && !parsedScheduledTime.ok) {
+    return {
+      ok: false,
+      message: parsedScheduledTime.message,
+    };
+  }
+
   const scheduledAt =
-    typeof rawScheduledAt === 'string' && rawScheduledAt
-      ? new Date(rawScheduledAt).toISOString()
-      : undefined;
+    parsedScheduledTime?.ok === true ? parsedScheduledTime.iso : undefined;
+
+  if (scheduledAt && !isAtLeastOneMinuteInFuture(scheduledAt)) {
+    return {
+      ok: false,
+      message: 'Schedule at least one minute in the future.',
+    };
+  }
+
   const rawMediaMetadata = String(formData.get('mediaMetadata') ?? '[]');
 
   const parsed = composerServerSchema.safeParse({
@@ -52,7 +78,7 @@ export async function createComposerPostAction(
     platforms,
     scheduleMode,
     scheduledAt,
-    timezone: formData.get('timezone') || 'UTC',
+    timezone,
     mediaMetadata: safeJsonParse(rawMediaMetadata),
   });
 

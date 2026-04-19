@@ -509,6 +509,12 @@ export type Database = {
     };
     Views: Record<string, never>;
     Functions: {
+      cancel_scheduled_post: {
+        Args: {
+          post_id_input: string;
+        };
+        Returns: boolean;
+      };
       claim_publish_jobs: {
         Args: {
           worker_id_input: string;

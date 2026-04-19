@@ -82,7 +82,7 @@ async function processPublishJob(supabase: AdminClient, job: PublishJob) {
 
   const { data: post, error: postError } = await supabase
     .from('posts')
-    .select('id,user_id,body')
+    .select('id,user_id,body,status')
     .eq('id', job.post_id)
     .single();
 
@@ -94,6 +94,16 @@ async function processPublishJob(supabase: AdminClient, job: PublishJob) {
       'The post for this job no longer exists.',
     );
     return { succeeded: 0, failed: 1, retryScheduled: 0 };
+  }
+
+  if (!isPostPublishable(post.status)) {
+    await updateJob(supabase, job.id, {
+      status: post.status === 'canceled' ? 'canceled' : 'succeeded',
+      locked_until: null,
+      last_error_code: null,
+      last_error_message: null,
+    });
+    return { succeeded: 0, failed: 0, retryScheduled: 0 };
   }
 
   const { data: targets, error: targetsError } = await supabase
@@ -377,4 +387,8 @@ function getEarliestRetryAt(current: string | null, candidate: string) {
   }
 
   return Date.parse(candidate) < Date.parse(current) ? candidate : current;
+}
+
+function isPostPublishable(status: string) {
+  return ['scheduled', 'queued', 'partially_failed', 'failed'].includes(status);
 }

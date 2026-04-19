@@ -11,7 +11,8 @@
     "lint": "eslint .",
     "typecheck": "tsc --noEmit",
     "check": "npm run typecheck && npm run lint",
-    "verify:schema": "node scripts/verify-phase2-schema.mjs"
+    "verify:schema": "node scripts/verify-phase2-schema.mjs",
+    "test:e2e": "playwright test tests/e2e/repost-smoke.spec.ts"
   },
   "dependencies": {
     "@radix-ui/react-avatar": "^1.1.11",
@@ -36,6 +37,7 @@
     "zustand": "latest"
   },
   "devDependencies": {
+    "@playwright/test": "^1.59.1",
     "@types/node": "latest",
     "@types/react": "latest",
     "@types/react-dom": "latest",

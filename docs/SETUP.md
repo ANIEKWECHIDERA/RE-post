@@ -63,8 +63,11 @@ npm run dev
 npm run verify:schema
 npm run check
 npm run build
+npm run test:e2e -- --reporter=line
 npm audit --audit-level=high
 ```
+
+The Playwright smoke test creates a temporary confirmed Supabase Auth user with `SUPABASE_SERVICE_ROLE_KEY`, signs in through the UI, queues a text post, visits Connections, and deletes the test user afterward.
 
 Health endpoint:
 
@@ -115,4 +118,4 @@ The function forwards scheduled cron calls to the Next.js worker endpoint.
 - Provider-native analytics are not live.
 - Scheduled rollup analytics are not populated yet.
 - Supabase advisor still reports `citext` installed in `public`; moving it requires a careful compatibility migration.
-- Live user-flow testing still needs a real authenticated account in the remote project.
+- Playwright user-flow coverage is a smoke test only; broader media upload, scheduling, realtime multi-tab, and provider OAuth flows still need dedicated tests.

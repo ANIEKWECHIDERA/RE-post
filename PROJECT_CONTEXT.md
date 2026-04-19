@@ -103,6 +103,14 @@ Verify Phase 2 schema coverage:
 npm run verify:schema
 ```
 
+Run the Playwright authenticated smoke test:
+
+```bash
+npm run test:e2e
+```
+
+The smoke test requires `NEXT_PUBLIC_SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`. It creates a temporary confirmed auth user, signs in through the UI, navigates dashboard/compose/connections, queues a text post, and deletes the user afterward.
+
 ## Environment Variables
 
 `.env` is ignored by git. Use `.env.example` as the safe template.
@@ -228,6 +236,7 @@ public/images/
 - `supabase/functions/publish-worker/index.ts`: Optional Supabase Edge Function cron target that forwards to the Next.js worker.
 - `supabase/tests/phase2_rls_smoke.sql`: Ownership/RLS smoke test for a real Supabase database.
 - `scripts/verify-phase2-schema.mjs`: Local schema coverage verifier.
+- `tests/e2e/repost-smoke.spec.ts`: Playwright authenticated smoke test for dashboard, composer, and navigation.
 - `types/database.ts`: Manual Phase 2 Supabase database type surface.
 - `types/dashboard.ts`: Dashboard, scheduled queue, activity, and analytics summary types.
 - `types/streaks.ts`: Shared streak status types.
@@ -261,7 +270,7 @@ public/images/
 ## Current Known Limitations
 
 - Supabase env vars are present in `.env`, and Phases 2, 4, 6, 7, 8, 9, and 12 have been applied remotely through Supabase MCP.
-- Auth routes and server actions are implemented, but live sign up/sign in still needs user-flow testing against the remote project.
+- Auth routes and server actions are implemented. Playwright now covers confirmed-user sign-in and app navigation against the remote project.
 - Dashboard data path is implemented, but unauthenticated smoke tests correctly return `401` for `/api/dashboard/summary`.
 - Realtime subscription code and publication migration are implemented, but live realtime verification needs an authenticated user.
 - Composer UI and media upload server action are implemented, but live persistence verification needs an authenticated user.
@@ -322,3 +331,4 @@ Recommended next work:
 - Completed Phase 10 in source by adding typed activity presentation, dashboard feed metadata, realtime cache prepending, throttled dashboard invalidation, post/social realtime refreshes, composer post/media activity events, and Phase 10 docs.
 - Completed Phase 11 in source by adding live dashboard analytics for post totals, platform spread, weekly output, streak history, publish success rate, scheduled vs instant posts, and Phase 11 docs.
 - Completed Phase 12 by adding advisor-driven hardening indexes, applying the Phase 12 migration remotely, adding setup docs, cleaning stale product copy, adding `npm run dev:all`, reviewing Supabase advisors, and running final verification/build/audit checks.
+- Added a Playwright authenticated smoke test that creates a temporary confirmed Supabase user, signs in through the UI, queues a text post, navigates the app, and cleans up the user.

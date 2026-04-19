@@ -55,8 +55,16 @@ Passed:
 npm run verify:schema
 npm run check
 npm run build
+npm run test:e2e -- --reporter=line
 npm audit --audit-level=high
 ```
+
+Playwright coverage:
+
+- Creates a temporary confirmed Supabase Auth user through the admin API.
+- Signs in through the real UI.
+- Verifies dashboard, compose, queued text post creation, connections navigation, and return-home navigation.
+- Deletes the temporary test user after the run.
 
 Remote checks:
 
@@ -86,7 +94,7 @@ Still scaffolded:
 - Provider-native analytics
 - Analytics rollup worker
 - Full activity history page
-- End-to-end user-flow tests with real accounts
+- Broader end-to-end coverage for media upload, scheduling, realtime multi-tab behavior, OAuth, and real provider publishing
 
 ## Recommended Next Work
 
@@ -96,4 +104,4 @@ The next implementation pass should prioritize:
 - active encrypted token persistence
 - real LinkedIn/Facebook/Instagram adapter calls
 - Supabase cron deployment for the publish worker
-- end-to-end tests using a real Supabase auth user
+- expanded end-to-end tests for media, scheduling, realtime, OAuth, and provider publishing

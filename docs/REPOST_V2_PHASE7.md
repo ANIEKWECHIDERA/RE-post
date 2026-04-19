@@ -62,14 +62,19 @@ This route is intended for a cron runner, a small background worker, or a future
 
 ## Provider Adapter State
 
-Production provider API calls are not live yet.
+This original phase created the adapter boundary. Navigation expansion Phase 7
+later added real provider adapter modules behind `PUBLISH_PROVIDER_MODE=live`.
 
 Current modes:
 
 - `PUBLISH_PROVIDER_MODE=disabled`: default; jobs fail safely with `provider_adapter_disabled`.
 - `PUBLISH_PROVIDER_MODE=mock`: records successful mock provider IDs for end-to-end engine flow testing.
+- `PUBLISH_PROVIDER_MODE=live`: invokes the real server-side provider adapters.
 
-This is deliberate. Real LinkedIn, Facebook, and Instagram calls should wait until OAuth callbacks create active connections with encrypted access tokens.
+Live mode should only be used with approved provider apps and controlled
+test accounts. Facebook still needs Page-token selection, and Instagram still
+needs Meta-backed professional-account selection before current connected
+records can publish successfully.
 
 ## Retry Model
 
@@ -134,13 +139,19 @@ Production-minded foundation:
 - retry-safe status propagation
 - normalized error persistence
 
-Scaffolded:
+Live adapter modules now exist:
 
-- real LinkedIn publishing
-- real Facebook publishing
-- real Instagram publishing
+- LinkedIn text/image publishing
+- Facebook Page text/image publishing once a Page token exists
+- Instagram professional-account image publishing once an IG Graph account token exists
+
+Still scaffolded:
+
+- Facebook Page selection
+- Instagram professional-account selection
+- provider video/carousel flows
+- controlled real-account validation
 - cron/hosted scheduler invocation
-- provider-specific media upload/final payload logic
 
 ## What Remains
 

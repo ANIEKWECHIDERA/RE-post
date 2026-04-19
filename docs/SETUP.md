@@ -41,7 +41,8 @@ Notes:
 - `SUPABASE_SERVICE_ROLE_KEY`, `TOKEN_ENCRYPTION_KEY`, and `PUBLISH_WORKER_SECRET` must stay server-only.
 - `PUBLISH_PROVIDER_MODE=disabled` is the safe default.
 - `PUBLISH_PROVIDER_MODE=mock` can test the internal publishing flow without real provider calls.
-- Real provider publishing still needs OAuth callback/token exchange.
+- `PUBLISH_PROVIDER_MODE=live` enables real provider adapter calls from the server-side worker.
+- Live Facebook and Instagram publishing still require Page/professional-account selection and provider app review before real-account use.
 
 ## Run
 
@@ -114,7 +115,8 @@ The function forwards scheduled cron calls to the Next.js worker endpoint.
 
 ## Known Limitations
 
-- Real LinkedIn, Facebook, and Instagram publishing is not live until OAuth callback/token exchange is implemented.
+- LinkedIn text/image adapter code exists, but real-account validation still requires approved credentials and `PUBLISH_PROVIDER_MODE=live`.
+- Facebook and Instagram adapter code exists, but Page/professional-account selection is still pending before current connected accounts can publish.
 - Provider-native analytics are not live.
 - Scheduled rollup analytics are not populated yet.
 - Supabase advisor still reports `citext` installed in `public`; moving it requires a careful compatibility migration.

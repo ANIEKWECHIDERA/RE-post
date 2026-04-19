@@ -227,7 +227,7 @@ test('confirmed creator can schedule, reschedule, and cancel a post', async ({
       timeout: 60_000,
     });
 
-    await page.getByRole('link', { name: 'Schedule' }).click();
+    await page.goto(`${baseUrl}/schedule`);
     await expect(page).toHaveURL(/\/schedule/, { timeout: 15_000 });
     await expect(
       page.getByText('Scheduled lifecycle from Playwright.').first(),

@@ -1,27 +1,14 @@
 import 'server-only';
 
 import { getServerEnv } from '@/lib/env/server';
-import type { SocialPlatform } from '@/types/database';
 import { ProviderPublishError } from '@/server/publishing/errors';
-
-export type ProviderPublishInput = {
-  platform: SocialPlatform;
-  postId: string;
-  targetId: string;
-  body: string;
-  connection: {
-    id: string;
-    accessToken: string;
-    providerAccountId: string;
-    scopes: string[];
-  } | null;
-};
-
-export type ProviderPublishResult = {
-  providerPublishId: string;
-  providerPermalink: string | null;
-  providerRequestId: string | null;
-};
+import { publishToFacebook } from '@/server/publishing/adapters/facebook';
+import { publishToInstagram } from '@/server/publishing/adapters/instagram';
+import { publishToLinkedIn } from '@/server/publishing/adapters/linkedin';
+import type {
+  ProviderPublishInput,
+  ProviderPublishResult,
+} from '@/server/publishing/adapters/types';
 
 export async function publishToProvider(
   input: ProviderPublishInput,
@@ -45,12 +32,20 @@ export async function publishToProvider(
     };
   }
 
-  // Real provider calls are enabled in Phase 7. At this boundary the adapter
-  // receives a decrypted token only inside server-only code; no client component
-  // or API response receives raw provider credentials.
-  throw new ProviderPublishError({
-    code: 'provider_adapter_disabled',
-    message: `${input.platform} publishing is not enabled yet.`,
-    retryable: false,
-  });
+  if (mode !== 'live') {
+    throw new ProviderPublishError({
+      code: 'provider_adapter_disabled',
+      message: `${input.platform} publishing is not enabled yet.`,
+      retryable: false,
+    });
+  }
+
+  switch (input.platform) {
+    case 'linkedin':
+      return publishToLinkedIn(input);
+    case 'facebook':
+      return publishToFacebook(input);
+    case 'instagram':
+      return publishToInstagram(input);
+  }
 }

@@ -249,7 +249,7 @@ async function fetchProviderProfile(
   }
 
   if (platform === 'facebook') {
-    const profileUrl = new URL('https://graph.facebook.com/v20.0/me');
+    const profileUrl = new URL('https://graph.facebook.com/v24.0/me');
     profileUrl.searchParams.set('fields', 'id,name,picture');
     profileUrl.searchParams.set('access_token', accessToken);
     const response = await fetch(profileUrl, {

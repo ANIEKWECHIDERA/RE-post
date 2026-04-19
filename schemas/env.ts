@@ -17,7 +17,7 @@ export const serverEnvSchema = publicEnvSchema.extend({
   INSTAGRAM_CLIENT_SECRET: z.string().optional(),
   PUBLISH_WORKER_SECRET: z.string().min(24).optional(),
   PUBLISH_WORKER_URL: z.string().url().optional(),
-  PUBLISH_PROVIDER_MODE: z.enum(['disabled', 'mock']).optional(),
+  PUBLISH_PROVIDER_MODE: z.enum(['disabled', 'mock', 'live']).optional(),
 });
 
 export type PublicEnv = z.infer<typeof publicEnvSchema>;

@@ -31,6 +31,7 @@ Current completed phases:
 - Navigation expansion Phase 4: Analytics foundations were already implemented through the real Analytics page. See `docs/REPOST_V2_NAV_PHASE4.md`.
 - Navigation expansion Phase 5: Provider OAuth callback flow for LinkedIn, Facebook, and Instagram. See `docs/REPOST_V2_NAV_PHASE5.md`.
 - Navigation expansion Phase 6: Encrypted active token persistence, token lifecycle metadata, and publishing-engine token retrieval. See `docs/REPOST_V2_NAV_PHASE6.md`.
+- Navigation expansion Phase 7: Real provider adapter modules for LinkedIn, Facebook, and Instagram behind live mode. See `docs/REPOST_V2_NAV_PHASE7.md`.
 
 ## Product Direction
 
@@ -148,7 +149,7 @@ Notes:
 - `TOKEN_ENCRYPTION_KEY` encrypts third-party provider access/refresh tokens before database persistence.
 - `PUBLISH_WORKER_SECRET` protects the server-side publish worker endpoint.
 - `PUBLISH_WORKER_URL` is used by the optional Supabase Edge Function cron target.
-- `PUBLISH_PROVIDER_MODE=disabled` is the safe default; use `mock` only for engine flow testing.
+- `PUBLISH_PROVIDER_MODE=disabled` is the safe default; use `mock` for engine flow testing and `live` only for controlled provider-account validation.
 
 ## Active Structure
 
@@ -216,7 +217,13 @@ public/images/
 - `proxy.ts`: Next.js 16 request proxy for session refresh.
 - `server/publishing/readiness.ts`: Server-only publishing readiness scaffold.
 - `server/publishing/engine.ts`: Phase 7 job-backed publishing engine.
-- `server/publishing/provider-adapters.ts`: Provider adapter boundary with disabled/mock modes.
+- `server/publishing/provider-adapters.ts`: Provider adapter dispatcher with disabled/mock/live modes.
+- `server/publishing/adapters/linkedin.ts`: LinkedIn UGC text/image publishing adapter.
+- `server/publishing/adapters/facebook.ts`: Facebook Page text/image publishing adapter, gated by Page-token connection metadata.
+- `server/publishing/adapters/instagram.ts`: Instagram professional-account image publishing adapter, gated by IG Graph connection metadata.
+- `server/publishing/adapters/http.ts`: Provider HTTP response normalization helpers.
+- `server/publishing/adapters/types.ts`: Shared provider adapter input/output and media types.
+- `server/publishing/media-assets.ts`: Server-side media lookup and temporary signed URL preparation for provider ingestion.
 - `server/publishing/errors.ts`: Normalized provider error types.
 - `server/scheduling/time.ts`: IANA timezone-aware wall-clock to UTC conversion.
 - `server/scheduling/actions.ts`: Scheduled-post cancellation server action.
@@ -282,6 +289,7 @@ public/images/
 - `docs/REPOST_V2_NAV_PHASE4.md`: Navigation expansion Phase 4 analytics-foundation status record.
 - `docs/REPOST_V2_NAV_PHASE5.md`: Navigation expansion Phase 5 OAuth callback implementation record.
 - `docs/REPOST_V2_NAV_PHASE6.md`: Navigation expansion Phase 6 secure token persistence implementation record.
+- `docs/REPOST_V2_NAV_PHASE7.md`: Navigation expansion Phase 7 real provider adapter implementation record.
 
 ## Security Principles
 
@@ -304,7 +312,8 @@ public/images/
 - Composer UI and media upload server action are implemented, but live persistence verification needs an authenticated user.
 - Scheduled Posts, Analytics, and Drafts now have real routes, Supabase-backed read paths, draft lifecycle mutations, and scheduled-post lifecycle mutations; server-side pagination/filter params can still be expanded later.
 - Social connection architecture now includes provider redirect/callback token exchange, encrypted token persistence, token lifecycle audit metadata, and server-only active token retrieval. Provider page/account selection, provider app review, and real-account refresh validation are still pending.
-- Publishing engine job processing is implemented and now consumes decrypted provider tokens through a server-only boundary, but real provider API calls remain disabled until the Phase 7 real adapter work is complete.
+- Publishing engine job processing is implemented and now consumes decrypted provider tokens and prepared media through a server-only boundary. Live provider calls are available only with `PUBLISH_PROVIDER_MODE=live`.
+- LinkedIn text/image adapter code is implemented. Facebook and Instagram adapter code is implemented but current OAuth records still need Page/professional-account selection before they can publish.
 - `POST /api/publish/run` exists and requires `PUBLISH_WORKER_SECRET`; it is ready for cron/worker invocation.
 - Scheduling is implemented in source with timezone-aware conversion and cancellation.
 - Supabase CLI token push remains blocked by the invalid `SUPABASE_ACCESS_TOKEN`, but Supabase MCP migration apply now works and was used successfully.
@@ -318,7 +327,6 @@ public/images/
 
 Recommended next work:
 
-- real LinkedIn/Facebook/Instagram provider adapters
 - Supabase cron deployment for the publish worker
 - controlled real-account provider integration validation
 - provider-native analytics ingestion
@@ -365,3 +373,4 @@ Recommended next work:
 - Completed navigation expansion Phase 3 by adding scheduled post edit, reschedule, cancel, duplicate-to-draft, terminal delete, date filters, cache refresh after scheduled mutations, and Playwright coverage for scheduled lifecycle.
 - Marked navigation expansion Phase 4 analytics foundations as already implemented and completed Phase 5 by adding provider OAuth redirects/callbacks, state verification, token exchange, profile lookup, encrypted connection persistence, and updated connection UX copy.
 - Completed navigation expansion Phase 6 by adding token lifecycle metadata, applying the token lifecycle migration through Supabase MCP, adding a server-only active token store with refresh attempts and normalized token failures, and wiring the publishing engine to retrieve decrypted provider tokens only inside the server boundary.
+- Completed navigation expansion Phase 7 by adding `PUBLISH_PROVIDER_MODE=live`, server-only media preparation, real LinkedIn text/image publishing, Facebook Page text/image adapter code, Instagram professional-account image adapter code, provider HTTP error normalization, and docs that mark Page/professional-account selection as pending.

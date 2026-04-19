@@ -7,6 +7,8 @@ import {
   normalizeProviderError,
   ProviderPublishError,
 } from '@/server/publishing/errors';
+import type { ProviderMediaAsset } from '@/server/publishing/adapters/types';
+import { getProviderMediaAssets } from '@/server/publishing/media-assets';
 import { publishToProvider } from '@/server/publishing/provider-adapters';
 import { getActiveProviderToken } from '@/server/connections/token-store';
 import type {
@@ -139,9 +141,20 @@ async function processPublishJob(supabase: AdminClient, job: PublishJob) {
   let retryScheduled = 0;
   let earliestRetryAt: string | null = null;
   let lastFailure: { code: string; message: string } | null = null;
+  const mediaAssets = await getProviderMediaAssets({
+    postId: post.id,
+    userId: post.user_id,
+    supabase,
+  });
 
   for (const target of targets) {
-    const targetResult = await processTarget(supabase, job, post, target);
+    const targetResult = await processTarget(
+      supabase,
+      job,
+      post,
+      target,
+      mediaAssets,
+    );
 
     if (targetResult.status === 'succeeded') {
       succeeded += 1;
@@ -231,6 +244,7 @@ async function processTarget(
   job: PublishJob,
   post: { id: string; user_id: string; body: string },
   target: PostTarget,
+  mediaAssets: ProviderMediaAsset[],
 ) {
   await updateTarget(supabase, target.id, {
     status: 'publishing',
@@ -287,7 +301,9 @@ async function processTarget(
         accessToken: token.accessToken,
         providerAccountId: token.providerAccountId,
         scopes: token.scopes,
+        metadata: token.metadata,
       },
+      media: mediaAssets,
     });
 
     await supabase

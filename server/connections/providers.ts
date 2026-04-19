@@ -37,9 +37,9 @@ const providerConfigs: Record<Platform, Omit<ProviderConfig, "status">> = {
     clientSecretEnv: "FACEBOOK_CLIENT_SECRET",
     scopes: ["pages_manage_posts", "pages_read_engagement"],
     scopeSeparator: ",",
-    authBaseUrl: "https://www.facebook.com/v20.0/dialog/oauth",
-    tokenUrl: "https://graph.facebook.com/v20.0/oauth/access_token",
-    profileUrl: "https://graph.facebook.com/v20.0/me",
+    authBaseUrl: "https://www.facebook.com/v24.0/dialog/oauth",
+    tokenUrl: "https://graph.facebook.com/v24.0/oauth/access_token",
+    profileUrl: "https://graph.facebook.com/v24.0/me",
     callbackPath: "/api/connections/facebook/callback",
   },
   instagram: {

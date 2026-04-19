@@ -3,7 +3,7 @@ import 'server-only';
 import { createSupabaseAdminClient } from '@/lib/supabase/admin';
 import { getProviderSecret } from '@/server/connections/providers';
 import { decryptSecret, encryptSecret } from '@/server/security/token-vault';
-import type { SocialPlatform } from '@/types/database';
+import type { Json, SocialPlatform } from '@/types/database';
 
 export type ActiveProviderToken =
   | {
@@ -14,6 +14,7 @@ export type ActiveProviderToken =
       expiresAt: string | null;
       scopes: string[];
       providerAccountId: string;
+      metadata: Json;
     }
   | {
       ok: false;
@@ -51,7 +52,7 @@ export async function getActiveProviderToken({
   const { data: connection } = await supabase
     .from('social_connections')
     .select(
-      'id,platform,provider_account_id,status,scopes,access_token_ciphertext,refresh_token_ciphertext,token_expires_at',
+      'id,platform,provider_account_id,status,scopes,access_token_ciphertext,refresh_token_ciphertext,token_expires_at,metadata',
     )
     .eq('user_id', userId)
     .eq('platform', platform)
@@ -103,6 +104,7 @@ export async function getActiveProviderToken({
       expiresAt: refreshed.expiresAt,
       scopes: connection.scopes,
       providerAccountId: connection.provider_account_id,
+      metadata: connection.metadata,
     };
   }
 
@@ -115,6 +117,7 @@ export async function getActiveProviderToken({
       expiresAt: connection.token_expires_at,
       scopes: connection.scopes,
       providerAccountId: connection.provider_account_id,
+      metadata: connection.metadata,
     };
   } catch {
     await markConnectionTokenFailure(connection.id, userId, 'token_decrypt_failed');

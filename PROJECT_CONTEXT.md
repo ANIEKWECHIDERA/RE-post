@@ -33,6 +33,7 @@ Current completed phases:
 - Navigation expansion Phase 6: Encrypted active token persistence, token lifecycle metadata, and publishing-engine token retrieval. See `docs/REPOST_V2_NAV_PHASE6.md`.
 - Navigation expansion Phase 7: Real provider adapter modules for LinkedIn, Facebook, and Instagram behind live mode. See `docs/REPOST_V2_NAV_PHASE7.md`.
 - Navigation expansion Phase 8: Supabase Cron deployment helper, JWT-protected Edge Function deployment, and private cron install runbook. See `docs/REPOST_V2_NAV_PHASE8.md`.
+- Navigation expansion Phase 9: Safe app-level E2E expansion while provider credentials are pending. See `docs/REPOST_V2_NAV_PHASE9.md`.
 
 ## Product Direction
 
@@ -111,13 +112,13 @@ Verify Phase 2 schema coverage:
 npm run verify:schema
 ```
 
-Run the Playwright authenticated smoke test:
+Run the Playwright app-level E2E suite:
 
 ```bash
 npm run test:e2e
 ```
 
-The smoke test requires `NEXT_PUBLIC_SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY`. It creates a temporary confirmed auth user, signs in through the UI, navigates dashboard/compose/connections, queues a text post, and deletes the user afterward.
+The E2E suite requires `NEXT_PUBLIC_SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, and `PUBLISH_WORKER_SECRET`. It creates temporary confirmed auth users, signs in through the UI, tests protected APIs, validates drafts/scheduling/composer behavior, invokes the worker in a safe no-provider path, and deletes users afterward.
 
 ## Environment Variables
 
@@ -268,7 +269,7 @@ public/images/
 - `supabase/sql/repost_publish_worker_cron.sql`: Private runbook for Vault secrets and recurring cron job installation.
 - `supabase/tests/phase2_rls_smoke.sql`: Ownership/RLS smoke test for a real Supabase database.
 - `scripts/verify-phase2-schema.mjs`: Local schema coverage verifier.
-- `tests/e2e/repost-smoke.spec.ts`: Playwright authenticated smoke test for dashboard, composer, and navigation.
+- `tests/e2e/repost-smoke.spec.ts`: Playwright app-level E2E suite for auth, navigation, composer validation, drafts, scheduling, API guards, ownership isolation, and worker safe-failure behavior.
 - `types/database.ts`: Manual Phase 2 Supabase database type surface.
 - `types/dashboard.ts`: Dashboard, scheduled queue, activity, and analytics summary types.
 - `types/streaks.ts`: Shared streak status types.
@@ -294,6 +295,8 @@ public/images/
 - `docs/REPOST_V2_NAV_PHASE6.md`: Navigation expansion Phase 6 secure token persistence implementation record.
 - `docs/REPOST_V2_NAV_PHASE7.md`: Navigation expansion Phase 7 real provider adapter implementation record.
 - `docs/REPOST_V2_NAV_PHASE8.md`: Navigation expansion Phase 8 cron deployment implementation record.
+- `docs/REPOST_V2_NAV_PHASE9.md`: Navigation expansion Phase 9 safe app-level E2E implementation record.
+- `README.md`: Public repository overview, setup summary, architecture notes, and contribution guidance.
 
 ## Security Principles
 
@@ -310,7 +313,7 @@ public/images/
 ## Current Known Limitations
 
 - Supabase env vars are present in `.env`, and Phases 2, 4, 6, 7, 8, 9, 12, and navigation expansion Phases 6 and 8 have been applied remotely through Supabase MCP.
-- Auth routes and server actions are implemented. Playwright now covers confirmed-user sign-in and app navigation against the remote project.
+- Auth routes and server actions are implemented. Playwright now covers confirmed-user sign-in, app navigation, protected API guards, invalid media rejection, draft lifecycle, schedule lifecycle, ownership isolation, and worker safe failure against the remote project.
 - Dashboard data path is implemented, but unauthenticated smoke tests correctly return `401` for `/api/dashboard/summary`.
 - Realtime subscription code and publication migration are implemented, but live realtime verification needs an authenticated user.
 - Composer UI and media upload server action are implemented, but live persistence verification needs an authenticated user.
@@ -381,3 +384,5 @@ Recommended next work:
 - Completed navigation expansion Phase 6 by adding token lifecycle metadata, applying the token lifecycle migration through Supabase MCP, adding a server-only active token store with refresh attempts and normalized token failures, and wiring the publishing engine to retrieve decrypted provider tokens only inside the server boundary.
 - Completed navigation expansion Phase 7 by adding `PUBLISH_PROVIDER_MODE=live`, server-only media preparation, real LinkedIn text/image publishing, Facebook Page text/image adapter code, Instagram professional-account image adapter code, provider HTTP error normalization, and docs that mark Page/professional-account selection as pending.
 - Completed navigation expansion Phase 8 by applying the cron deployment migration through Supabase MCP, enabling `pg_net` and `pg_cron`, adding `public.invoke_publish_worker_cron(...)`, deploying the JWT-protected `publish-worker` Edge Function, and adding the private Vault/cron SQL runbook.
+- Completed navigation expansion Phase 9 safe E2E expansion by adding protected API guard checks, invalid media rejection, draft persistence/reopen coverage, cross-user draft isolation, scheduled post lifecycle polling, and a no-provider worker run that records `connection_missing`.
+- Added the root `README.md` so visitors and contributors can understand the product, stack, setup path, Supabase architecture, provider integration status, and contribution rules quickly.

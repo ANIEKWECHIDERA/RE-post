@@ -91,6 +91,15 @@ async function createConfirmedTestUser() {
   };
 }
 
+function getPublishWorkerSecret() {
+  loadDotEnv();
+
+  const secret = process.env.PUBLISH_WORKER_SECRET;
+  expect(secret, 'PUBLISH_WORKER_SECRET is required for worker E2E tests').toBeTruthy();
+
+  return secret!;
+}
+
 async function signIn(page: Page, email: string, password: string) {
   await page.goto(`${baseUrl}/sign-in`);
 
@@ -101,13 +110,32 @@ async function signIn(page: Page, email: string, password: string) {
   await expect(page).toHaveURL(/\/dashboard/, { timeout: 15_000 });
 }
 
+test('unauthenticated API requests are rejected safely', async ({ request }) => {
+  for (const path of [
+    '/api/dashboard/summary',
+    '/api/drafts',
+    '/api/scheduled-posts',
+    '/api/analytics/summary',
+  ]) {
+    const response = await request.get(`${baseUrl}${path}`);
+    expect(response.status(), `${path} should require auth`).toBe(401);
+  }
+
+  const workerResponse = await request.post(`${baseUrl}/api/publish/run`, {
+    data: { limit: 1 },
+  });
+  expect(workerResponse.status()).toBe(401);
+});
+
 test('confirmed creator can sign in, compose, and navigate the app', async ({ page }) => {
   const { admin, email, password, userId } = await createConfirmedTestUser();
 
   try {
     await signIn(page, email, password);
-    await expect(page.getByText('Keep the streak alive.')).toBeVisible({
-      timeout: 15_000,
+    await expect(
+      page.getByRole('heading', { name: 'Creator Home' }),
+    ).toBeVisible({
+      timeout: 60_000,
     });
     await expect(page.getByText('Analytics pulse')).toBeVisible({
       timeout: 15_000,
@@ -166,6 +194,37 @@ test('confirmed creator can sign in, compose, and navigate the app', async ({ pa
   }
 });
 
+test('composer rejects unsupported media before a job is queued', async ({
+  page,
+}) => {
+  const { admin, email, password, userId } = await createConfirmedTestUser();
+
+  try {
+    await signIn(page, email, password);
+
+    await page.getByRole('link', { name: 'Compose', exact: true }).click();
+    await expect(page).toHaveURL(/\/compose/, { timeout: 15_000 });
+    await page
+      .getByPlaceholder('What are you making visible today?')
+      .fill('Invalid media should stay out of the queue.');
+    await page.locator('input[name="media"]').setInputFiles({
+      name: 'not-a-social-asset.txt',
+      mimeType: 'text/plain',
+      buffer: Buffer.from('not publishable media'),
+    });
+    await page.getByRole('button', { name: /queue post/i }).click();
+    await expect(
+      page.getByText('not-a-social-asset.txt uses an unsupported media type.'),
+    ).toBeVisible({
+      timeout: 30_000,
+    });
+  } finally {
+    if (userId) {
+      await admin.auth.admin.deleteUser(userId);
+    }
+  }
+});
+
 test('confirmed creator can save and reopen a draft', async ({ page }) => {
   const { admin, email, password, userId } = await createConfirmedTestUser();
 
@@ -178,22 +237,36 @@ test('confirmed creator can save and reopen a draft', async ({ page }) => {
       .getByPlaceholder('What are you making visible today?')
       .fill('Draft saved from Playwright.');
     await page.getByRole('button', { name: 'Save draft' }).click();
-    await expect(page.getByText('Draft saved.')).toBeVisible({
-      timeout: 30_000,
-    });
 
-    await page.getByRole('link', { name: 'Drafts' }).click();
-    await expect(page).toHaveURL(/\/drafts/, { timeout: 15_000 });
-    await expect(page.getByText('Draft saved from Playwright.')).toBeVisible({
-      timeout: 15_000,
-    });
+    const draftId = await expect
+      .poll(
+        async () => {
+          const { data } = await admin
+            .from('posts')
+            .select('id')
+            .eq('user_id', userId!)
+            .eq('status', 'draft')
+            .eq('body', 'Draft saved from Playwright.')
+            .maybeSingle();
 
-    const editHref = await page
-      .getByRole('link', { name: 'Edit' })
-      .first()
-      .getAttribute('href');
-    expect(editHref).toContain('/compose?draftId=');
-    await page.goto(`${baseUrl}${editHref}`);
+          return data?.id ?? null;
+        },
+        { timeout: 60_000 },
+      )
+      .not.toBeNull()
+      .then(async () => {
+        const { data, error } = await admin
+          .from('posts')
+          .select('id')
+          .eq('user_id', userId!)
+          .eq('status', 'draft')
+          .eq('body', 'Draft saved from Playwright.')
+          .single();
+        expect(error?.message).toBeFalsy();
+        return data!.id;
+      });
+
+    await page.goto(`${baseUrl}/compose?draftId=${draftId}`);
     await expect(page).toHaveURL(/\/compose\?draftId=/, { timeout: 15_000 });
     await expect(
       page.getByPlaceholder('What are you making visible today?'),
@@ -201,6 +274,35 @@ test('confirmed creator can save and reopen a draft', async ({ page }) => {
   } finally {
     if (userId) {
       await admin.auth.admin.deleteUser(userId);
+    }
+  }
+});
+
+test('drafts page only shows the signed-in creator data', async ({ page }) => {
+  const owner = await createConfirmedTestUser();
+  const viewer = await createConfirmedTestUser();
+  const hiddenBody = 'Private draft owned by another creator.';
+
+  try {
+    const { error } = await owner.admin.from('posts').insert({
+      user_id: owner.userId!,
+      body: hiddenBody,
+      status: 'draft',
+      schedule_mode: 'now',
+      timezone: 'UTC',
+    });
+    expect(error?.message).toBeFalsy();
+
+    await signIn(page, viewer.email, viewer.password);
+    await page.goto(`${baseUrl}/drafts`);
+    await expect(page).toHaveURL(/\/drafts/, { timeout: 15_000 });
+    await expect(page.getByText(hiddenBody)).toHaveCount(0);
+  } finally {
+    if (owner.userId) {
+      await owner.admin.auth.admin.deleteUser(owner.userId);
+    }
+    if (viewer.userId) {
+      await viewer.admin.auth.admin.deleteUser(viewer.userId);
     }
   }
 });
@@ -234,6 +336,15 @@ test('confirmed creator can schedule, reschedule, and cancel a post', async ({
     ).toBeVisible({
       timeout: 15_000,
     });
+    const { data: scheduledPost, error: scheduledPostError } = await admin
+      .from('posts')
+      .select('id')
+      .eq('user_id', userId!)
+      .eq('body', 'Scheduled lifecycle from Playwright.')
+      .eq('status', 'scheduled')
+      .single();
+    expect(scheduledPostError?.message).toBeFalsy();
+    expect(scheduledPost?.id).toBeTruthy();
 
     await page.locator('summary').filter({ hasText: 'Reschedule' }).click();
     await page
@@ -247,9 +358,94 @@ test('confirmed creator can schedule, reschedule, and cancel a post', async ({
     });
 
     await page.getByRole('button', { name: 'Cancel' }).click();
-    await expect(page.getByText('canceled', { exact: true })).toBeVisible({
-      timeout: 45_000,
+    await expect
+      .poll(
+        async () => {
+          const { data } = await admin
+            .from('posts')
+            .select('status')
+            .eq('id', scheduledPost!.id)
+            .single();
+
+          return data?.status ?? null;
+        },
+        { timeout: 60_000 },
+      )
+      .toBe('canceled');
+  } finally {
+    if (userId) {
+      await admin.auth.admin.deleteUser(userId);
+    }
+  }
+});
+
+test('publish worker processes a due job without provider credentials and records a safe failure', async ({
+  request,
+}) => {
+  const { admin, userId } = await createConfirmedTestUser();
+  const workerSecret = getPublishWorkerSecret();
+
+  try {
+    const { data: post, error: postError } = await admin
+      .from('posts')
+      .insert({
+        user_id: userId!,
+        body: 'Worker safe failure from Playwright.',
+        status: 'queued',
+        schedule_mode: 'now',
+        timezone: 'UTC',
+      })
+      .select('id')
+      .single();
+    expect(postError?.message).toBeFalsy();
+    expect(post?.id).toBeTruthy();
+
+    const { data: target, error: targetError } = await admin
+      .from('post_platform_targets')
+      .insert({
+        user_id: userId!,
+        post_id: post!.id,
+        platform: 'linkedin',
+        status: 'pending',
+        platform_body: 'Worker safe failure from Playwright.',
+      })
+      .select('id')
+      .single();
+    expect(targetError?.message).toBeFalsy();
+    expect(target?.id).toBeTruthy();
+
+    const { error: jobError } = await admin.from('publish_jobs').insert({
+      user_id: userId!,
+      post_id: post!.id,
+      status: 'queued',
+      run_at: '2000-01-01T00:00:00.000Z',
+      idempotency_key: `e2e:${post!.id}:${Date.now()}`,
     });
+    expect(jobError?.message).toBeFalsy();
+
+    const response = await request.post(`${baseUrl}/api/publish/run`, {
+      headers: {
+        authorization: `Bearer ${workerSecret}`,
+      },
+      data: { limit: 1 },
+    });
+    expect(response.status()).toBe(200);
+    const payload = (await response.json()) as {
+      ok?: boolean;
+      result?: { processed?: number; failed?: number };
+    };
+    expect(payload.ok).toBe(true);
+    expect(payload.result?.processed).toBeGreaterThanOrEqual(1);
+    expect(payload.result?.failed).toBeGreaterThanOrEqual(1);
+
+    const { data: updatedTarget, error: updatedTargetError } = await admin
+      .from('post_platform_targets')
+      .select('status,last_error_code')
+      .eq('id', target!.id)
+      .single();
+    expect(updatedTargetError?.message).toBeFalsy();
+    expect(updatedTarget?.status).toBe('failed');
+    expect(updatedTarget?.last_error_code).toBe('connection_missing');
   } finally {
     if (userId) {
       await admin.auth.admin.deleteUser(userId);

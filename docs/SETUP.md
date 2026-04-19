@@ -69,7 +69,7 @@ npm run test:e2e -- --reporter=line
 npm audit --audit-level=high
 ```
 
-The Playwright smoke test creates a temporary confirmed Supabase Auth user with `SUPABASE_SERVICE_ROLE_KEY`, signs in through the UI, queues a text post, visits Connections, and deletes the test user afterward.
+The Playwright E2E suite creates temporary confirmed Supabase Auth users with `SUPABASE_SERVICE_ROLE_KEY`, signs in through the UI, verifies protected API guards, checks composer validation, drafts, scheduling, ownership isolation, and safely invokes the worker without provider credentials. Test users are deleted afterward.
 
 Health endpoint:
 
@@ -142,4 +142,4 @@ Before scheduling cron:
 - Scheduled rollup analytics are not populated yet.
 - Supabase advisor still reports `citext` and `pg_net` installed in `public`; `pg_net` does not support `ALTER EXTENSION ... SET SCHEMA`, so treat it as a known platform warning unless Supabase provides a supported move path.
 - Supabase Auth leaked password protection is disabled; enable it before production.
-- Playwright user-flow coverage is a smoke test only; broader media upload, scheduling, realtime multi-tab, and provider OAuth flows still need dedicated tests.
+- Playwright user-flow coverage now covers safe app-level auth, API guards, drafts, scheduling, invalid media, ownership isolation, and worker failure behavior. Realtime multi-tab and real provider OAuth/publishing flows still need dedicated staging tests.

@@ -107,6 +107,26 @@ test('confirmed creator can sign in, compose, and navigate the app', async ({ pa
     });
     await expect(page.getByText(/post queued/i)).toBeVisible();
 
+    await page.getByRole('link', { name: 'Schedule' }).click();
+    await expect(page).toHaveURL(/\/schedule/, { timeout: 15_000 });
+    await expect(page.getByText('Keep future-you covered.')).toBeVisible({
+      timeout: 15_000,
+    });
+
+    await page.getByRole('link', { name: 'Drafts' }).click();
+    await expect(page).toHaveURL(/\/drafts/, { timeout: 15_000 });
+    await expect(page.getByText('Keep the ideas warm.')).toBeVisible({
+      timeout: 15_000,
+    });
+
+    await page.getByRole('link', { name: 'Analytics' }).click();
+    await expect(page).toHaveURL(/\/analytics/, { timeout: 15_000 });
+    await expect(
+      page.getByText('Proof that consistency compounds.'),
+    ).toBeVisible({
+      timeout: 15_000,
+    });
+
     await page.getByRole('link', { name: /connections/i }).click();
     await expect(page).toHaveURL(/\/connections/, { timeout: 15_000 });
     await expect(page.getByText('Social accounts')).toBeVisible({

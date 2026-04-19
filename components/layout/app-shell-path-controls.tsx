@@ -1,6 +1,13 @@
 "use client";
 
-import { BarChart3, CalendarDays, Home, Link2, PenSquare } from "lucide-react";
+import {
+  BarChart3,
+  CalendarDays,
+  FileText,
+  Home,
+  Link2,
+  PenSquare,
+} from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 
@@ -9,15 +16,19 @@ import { cn } from "@/lib/utils";
 const navItems = [
   { label: "Home", href: "/dashboard", icon: Home },
   { label: "Compose", href: "/compose", icon: PenSquare },
-  { label: "Schedule", href: "/dashboard", icon: CalendarDays },
+  { label: "Schedule", href: "/schedule", icon: CalendarDays },
+  { label: "Drafts", href: "/drafts", icon: FileText },
   { label: "Connections", href: "/connections", icon: Link2 },
-  { label: "Analytics", href: "/dashboard", icon: BarChart3 },
+  { label: "Analytics", href: "/analytics", icon: BarChart3 },
 ];
 
 const pageTitles: Record<string, string> = {
   "/dashboard": "Creator Home",
   "/compose": "Compose",
+  "/schedule": "Schedule",
+  "/drafts": "Drafts",
   "/connections": "Connections",
+  "/analytics": "Analytics",
 };
 
 export function AppShellNavigation() {
@@ -26,7 +37,7 @@ export function AppShellNavigation() {
   return (
     <nav className="grid gap-2">
       {navItems.map(item => {
-        const isActive = pathname === item.href && item.label !== "Schedule" && item.label !== "Analytics";
+        const isActive = pathname === item.href;
 
         return (
           <Link

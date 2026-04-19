@@ -183,6 +183,9 @@ public/images/
 - `app/(app)/layout.tsx`: Protected app route boundary.
 - `app/(app)/dashboard/page.tsx`: Authenticated dashboard page.
 - `app/(app)/compose/page.tsx`: Authenticated post composer page.
+- `app/(app)/schedule/page.tsx`: Authenticated scheduled posts page.
+- `app/(app)/analytics/page.tsx`: Authenticated analytics page.
+- `app/(app)/drafts/page.tsx`: Authenticated drafts page.
 - `app/(app)/connections/page.tsx`: Authenticated social connections page.
 - `app/(auth)/sign-in/page.tsx`: Sign-in route.
 - `app/(auth)/sign-up/page.tsx`: Sign-up route.
@@ -216,9 +219,17 @@ public/images/
 - `server/auth/session.ts`: Server-side user lookup.
 - `server/profiles/bootstrap.ts`: Profile/streak bootstrap repair helper.
 - `server/dashboard/queries.ts`: Server-side dashboard summary and live analytics query.
+- `server/scheduled-posts/queries.ts`: Scheduled posts page data query.
+- `server/analytics/queries.ts`: Analytics page data query.
+- `server/drafts/queries.ts`: Drafts page data query.
+- `server/posts/list-helpers.ts`: Shared post list preview/media helpers.
 - `app/api/dashboard/summary/route.ts`: Authenticated dashboard summary endpoint.
 - `hooks/use-dashboard-summary.ts`: TanStack Query dashboard summary hook.
 - `hooks/use-dashboard-realtime.ts`: Focused Supabase Realtime cache prepend and throttled dashboard invalidation hook.
+- `hooks/use-scheduled-posts.ts`: TanStack Query scheduled posts hook.
+- `hooks/use-analytics-page.ts`: TanStack Query analytics page hook.
+- `hooks/use-drafts.ts`: TanStack Query drafts hook.
+- `hooks/use-page-realtime.ts`: Focused page-level realtime invalidation hook.
 - `app/api/publish/run/route.ts`: Secret-protected publishing worker endpoint.
 - `features/composer/components/post-composer.tsx`: Composer UI for text, platforms, media, timing, and warnings.
 - `features/composer/media-validation.ts`: Browser-side media metadata inspection and platform warning logic.
@@ -255,6 +266,7 @@ public/images/
 - `docs/REPOST_V2_PHASE11.md`: Phase 11 analytics scaffolding implementation record.
 - `docs/REPOST_V2_PHASE12.md`: Phase 12 hardening implementation record.
 - `docs/SETUP.md`: Current setup, environment, migration, worker, and limitation notes.
+- `docs/REPOST_V2_NAV_PHASE1.md`: Navigation expansion Phase 1 implementation record.
 
 ## Security Principles
 
@@ -275,6 +287,7 @@ public/images/
 - Dashboard data path is implemented, but unauthenticated smoke tests correctly return `401` for `/api/dashboard/summary`.
 - Realtime subscription code and publication migration are implemented, but live realtime verification needs an authenticated user.
 - Composer UI and media upload server action are implemented, but live persistence verification needs an authenticated user.
+- Scheduled Posts, Analytics, and Drafts now have real routes and Supabase-backed read paths; their advanced mutations and server-side pagination/filter params are pending later navigation-expansion phases.
 - Social connection architecture is implemented, but provider redirect/callback token exchange is pending.
 - Publishing engine job processing is implemented, but real provider API calls are disabled until OAuth token exchange is complete.
 - `POST /api/publish/run` exists and requires `PUBLISH_WORKER_SECRET`; it is ready for cron/worker invocation.
@@ -334,3 +347,4 @@ Recommended next work:
 - Completed Phase 12 by adding advisor-driven hardening indexes, applying the Phase 12 migration remotely, adding setup docs, cleaning stale product copy, adding `npm run dev:all`, reviewing Supabase advisors, and running final verification/build/audit checks.
 - Added a Playwright authenticated smoke test that creates a temporary confirmed Supabase user, signs in through the UI, queues a text post, navigates the app, and cleans up the user.
 - Re-tested with Playwright MCP, fixed path-aware shell titles/navigation, pinned dashboard date formatting to avoid hydration mismatches, added the favicon metadata/asset, and hardened E2E waits for remote-backed dev runs.
+- Started the navigation expansion by adding real `/schedule`, `/analytics`, and `/drafts` routes with Supabase-backed query layers, API routes, React Query hooks, realtime invalidation, and route coverage in Playwright.

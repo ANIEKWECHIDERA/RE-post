@@ -6,7 +6,7 @@ export function GET() {
   return NextResponse.json({
     ok: true,
     app: 're-post-v2',
-    phase: 8,
+    phase: 9,
     supabaseConfigured: isSupabaseConfigured(),
   });
 }

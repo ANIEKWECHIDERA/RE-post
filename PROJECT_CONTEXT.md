@@ -21,6 +21,7 @@ Current completed phases:
 - Phase 6: Social connection architecture, token encryption, and OAuth state scaffolding. See `docs/REPOST_V2_PHASE6.md`.
 - Phase 7: Backend-controlled publishing engine, worker route, job claiming, attempts, retries, and provider adapter boundary. See `docs/REPOST_V2_PHASE7.md`.
 - Phase 8: Timezone-aware scheduling, cancelable scheduled queue, worker cron scaffold, and safe reprocessing guards. See `docs/REPOST_V2_PHASE8.md`.
+- Phase 9: Creator timezone-aware streak engine, streak activity events, dashboard streak status, and remote migration push. See `docs/REPOST_V2_PHASE9.md`.
 
 ## Product Direction
 
@@ -197,6 +198,7 @@ public/images/
 - `server/publishing/errors.ts`: Normalized provider error types.
 - `server/scheduling/time.ts`: IANA timezone-aware wall-clock to UTC conversion.
 - `server/scheduling/actions.ts`: Scheduled-post cancellation server action.
+- `server/streaks/rules.ts`: Dashboard streak status and risk messaging rules.
 - `server/auth/actions.ts`: Sign up, sign in, and sign out server actions.
 - `server/auth/session.ts`: Server-side user lookup.
 - `server/profiles/bootstrap.ts`: Profile/streak bootstrap repair helper.
@@ -217,10 +219,12 @@ public/images/
 - `supabase/migrations/202604190003_repost_v2_phase6_connection_oauth_states.sql`: OAuth state/PKCE storage migration.
 - `supabase/migrations/202604190004_repost_v2_phase7_publish_claiming.sql`: Publish job claiming RPC with row locking.
 - `supabase/migrations/202604190005_repost_v2_phase8_scheduling.sql`: Scheduled-post cancellation function and scheduler indexes.
+- `supabase/migrations/202604190006_repost_v2_phase9_streak_engine.sql`: Streak transition function and search-path hardening.
 - `supabase/functions/publish-worker/index.ts`: Optional Supabase Edge Function cron target that forwards to the Next.js worker.
 - `supabase/tests/phase2_rls_smoke.sql`: Ownership/RLS smoke test for a real Supabase database.
 - `scripts/verify-phase2-schema.mjs`: Local schema coverage verifier.
 - `types/database.ts`: Manual Phase 2 Supabase database type surface.
+- `types/streaks.ts`: Shared streak status types.
 - `docs/REPOST_V2_PHASE0.md`: Architecture and migration plan.
 - `docs/REPOST_V2_PHASE1.md`: Phase 1 implementation record.
 - `docs/REPOST_V2_PHASE2.md`: Phase 2 schema implementation record.
@@ -230,6 +234,7 @@ public/images/
 - `docs/REPOST_V2_PHASE6.md`: Phase 6 social connections implementation record.
 - `docs/REPOST_V2_PHASE7.md`: Phase 7 publishing engine implementation record.
 - `docs/REPOST_V2_PHASE8.md`: Phase 8 scheduling implementation record.
+- `docs/REPOST_V2_PHASE9.md`: Phase 9 streak implementation record.
 
 ## Security Principles
 
@@ -245,29 +250,29 @@ public/images/
 
 ## Current Known Limitations
 
-- Supabase env vars are present in `.env`, but migrations still need to be applied to the Supabase project before authenticated dashboard data can be verified.
-- Auth routes and server actions are implemented, but live sign up/sign in requires Supabase env vars and the Phase 2 migration applied.
+- Supabase env vars are present in `.env`, and Phases 2, 4, 6, 7, 8, and 9 have been applied remotely through Supabase MCP.
+- Auth routes and server actions are implemented, but live sign up/sign in still needs user-flow testing against the remote project.
 - Dashboard data path is implemented, but unauthenticated smoke tests correctly return `401` for `/api/dashboard/summary`.
-- Realtime subscription code and publication migration are implemented, but live realtime verification needs an authenticated user and applied migrations.
-- Composer UI and media upload server action are implemented, but live persistence verification needs a linked Supabase project, applied migrations, and an authenticated user.
+- Realtime subscription code and publication migration are implemented, but live realtime verification needs an authenticated user.
+- Composer UI and media upload server action are implemented, but live persistence verification needs an authenticated user.
 - Social connection architecture is implemented, but provider redirect/callback token exchange is pending.
 - Publishing engine job processing is implemented, but real provider API calls are disabled until OAuth token exchange is complete.
-- `POST /api/publish/run` exists and requires `PUBLISH_WORKER_SECRET`; it is ready for cron/worker invocation after migrations are applied.
-- Scheduling is implemented in source with timezone-aware conversion and cancellation, but live verification needs migrations applied.
-- Codex Supabase MCP is configured and OAuth-authenticated globally, but this running tool session does not expose Supabase MCP tools until a new session/runtime loads the server.
-- Supabase migration push is still blocked because the `SUPABASE_ACCESS_TOKEN` value in `.env` is not accepted by the Supabase CLI as a valid `sbp_...` personal access token.
-- Streak calculation, richer activity events, and analytics are pending later phases.
+- `POST /api/publish/run` exists and requires `PUBLISH_WORKER_SECRET`; it is ready for cron/worker invocation.
+- Scheduling is implemented in source with timezone-aware conversion and cancellation.
+- Supabase CLI token push remains blocked by the invalid `SUPABASE_ACCESS_TOKEN`, but Supabase MCP migration apply now works and was used successfully.
+- Streak calculation is implemented, but automated missed-day materialization and streak history visualization are pending later phases.
+- Supabase security advisor currently reports `extension_in_public` for `citext`; the mutable function search path warning was fixed in Phase 9.
 
 ## Next Phase
 
-Phase 9 should implement:
+Phase 10 should implement:
 
-- streak business rules
-- successful publish event handling
-- daily boundary logic by creator timezone
-- streak state updates
-- realtime streak activity
-- missed-day and recovery UX states
+- real-time activity system
+- richer event typing and metadata display
+- feed grouping/deduping
+- realtime updates for scheduled queue and streak events
+- visual states for publish started/succeeded/failed/retry/streak changes
+- noise controls so realtime stays useful
 
 ## Documentation Maintenance Rules
 
@@ -299,3 +304,5 @@ Phase 9 should implement:
 - Confirmed the Claude MCP command is not installed in this shell, so Supabase MCP push could not be used from this environment.
 - Completed Phase 8 in source by adding timezone-aware scheduled time conversion, cancelable scheduled queue UI, cancellation RPC/action, scheduler Edge Function scaffold, worker publishability guard, scheduler indexes, and Phase 8 docs.
 - Added and authenticated the Codex Supabase MCP server globally; current session visibility still requires a reload before Supabase MCP tools appear to this agent runtime.
+- Applied Phases 2, 4, 6, 7, 8, and 9 migrations remotely through Supabase MCP.
+- Completed Phase 9 in source by adding database-backed streak transitions, publishing-engine streak recording, dashboard streak status messaging, search-path hardening, and Phase 9 docs.

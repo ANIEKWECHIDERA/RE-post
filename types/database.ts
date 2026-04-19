@@ -523,6 +523,14 @@ export type Database = {
         };
         Returns: Database['public']['Tables']['publish_jobs']['Row'][];
       };
+      record_publish_streak_success: {
+        Args: {
+          user_id_input: string;
+          post_id_input: string;
+          occurred_at_input?: string;
+        };
+        Returns: Database['public']['Tables']['streak_state']['Row'];
+      };
       handle_new_user: {
         Args: Record<string, never>;
         Returns: unknown;

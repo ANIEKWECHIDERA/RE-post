@@ -1,12 +1,18 @@
 import 'server-only';
 
 import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { getStreakStatus } from '@/server/streaks/rules';
 import type { DashboardSummary } from '@/types/dashboard';
 import type { SocialPlatform } from '@/types/database';
 
 export const emptyDashboardSummary: DashboardSummary = {
   currentStreak: 0,
   longestStreak: 0,
+  streakStatus: getStreakStatus({
+    currentCount: 0,
+    lastCountedOn: null,
+    timezone: 'UTC',
+  }),
   postsThisWeek: 0,
   scheduledPosts: 0,
   connectedPlatforms: 0,
@@ -37,7 +43,7 @@ export async function getDashboardSummary(
   ] = await Promise.all([
     supabase
       .from('streak_state')
-      .select('current_count,longest_count')
+      .select('current_count,longest_count,last_counted_on,timezone')
       .eq('user_id', userId)
       .maybeSingle(),
     supabase
@@ -86,6 +92,11 @@ export async function getDashboardSummary(
   return {
     currentStreak: streakResult.data?.current_count ?? 0,
     longestStreak: streakResult.data?.longest_count ?? 0,
+    streakStatus: getStreakStatus({
+      currentCount: streakResult.data?.current_count ?? 0,
+      lastCountedOn: streakResult.data?.last_counted_on ?? null,
+      timezone: streakResult.data?.timezone ?? 'UTC',
+    }),
     postsThisWeek: postsThisWeekResult.count ?? 0,
     scheduledPosts: scheduledPostsResult.count ?? 0,
     connectedPlatforms: connectedPlatformsResult.count ?? 0,

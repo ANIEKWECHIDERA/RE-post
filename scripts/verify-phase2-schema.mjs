@@ -16,11 +16,15 @@ const publishingMigrationPath = resolve(
 const schedulingMigrationPath = resolve(
   'supabase/migrations/202604190005_repost_v2_phase8_scheduling.sql',
 );
+const streakMigrationPath = resolve(
+  'supabase/migrations/202604190006_repost_v2_phase9_streak_engine.sql',
+);
 const sql = readFileSync(migrationPath, 'utf8');
 const realtimeSql = readFileSync(realtimeMigrationPath, 'utf8');
 const connectionSql = readFileSync(connectionMigrationPath, 'utf8');
 const publishingSql = readFileSync(publishingMigrationPath, 'utf8');
 const schedulingSql = readFileSync(schedulingMigrationPath, 'utf8');
+const streakSql = readFileSync(streakMigrationPath, 'utf8');
 
 const requiredTables = [
   'profiles',
@@ -121,6 +125,14 @@ if (
 
 if (!schedulingSql.includes('publish_jobs_worker_recovery_idx')) {
   missing.push('index:publish_jobs_worker_recovery_idx');
+}
+
+if (
+  !streakSql.includes(
+    'create or replace function public.record_publish_streak_success',
+  )
+) {
+  missing.push('function:record_publish_streak_success');
 }
 
 for (const realtimeTable of [

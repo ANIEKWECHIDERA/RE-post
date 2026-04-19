@@ -58,6 +58,7 @@ export function CreatorDashboard({
   const supabaseReady = isSupabaseConfigured();
   useDashboardRealtime({ enabled: supabaseReady, userId });
   const realtimeStatus = supabaseReady && userId ? 'listening' : 'waiting';
+  const streakStatus = data.streakStatus;
 
   return (
     <section className="grid gap-6">
@@ -154,6 +155,7 @@ export function CreatorDashboard({
           icon={Flame}
           label="Current streak"
           value={isLoading ? '--' : `${data?.currentStreak ?? 0} days`}
+          note={streakStatus.label}
         />
         <MetricCard
           icon={Flame}
@@ -241,6 +243,35 @@ export function CreatorDashboard({
 
         <Card className="rounded-lg border bg-card shadow-soft">
           <CardHeader>
+            <CardTitle className="flex items-center gap-2">
+              <Flame className="h-5 w-5 text-primary" />
+              Streak signal
+            </CardTitle>
+            <CardDescription>{streakStatus.message}</CardDescription>
+          </CardHeader>
+          <CardContent className="grid gap-4">
+            <div className="grid grid-cols-2 gap-3">
+              <div className="rounded-lg border p-4">
+                <p className="text-xs text-muted-foreground">State</p>
+                <p className="mt-1 text-lg font-semibold">
+                  {streakStatus.label}
+                </p>
+              </div>
+              <div className="rounded-lg border p-4">
+                <p className="text-xs text-muted-foreground">Rule</p>
+                <p className="mt-1 text-lg font-semibold">Once daily</p>
+              </div>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              One successful publish to any selected platform counts once for
+              the creator day. Scheduled posts count when they publish, not when
+              they are queued.
+            </p>
+          </CardContent>
+        </Card>
+
+        <Card className="rounded-lg border bg-card shadow-soft">
+          <CardHeader>
             <CardTitle>Recent activity</CardTitle>
             <CardDescription>
               High-signal events refresh live when Supabase Realtime is
@@ -294,10 +325,12 @@ function MetricCard({
   icon: Icon,
   label,
   value,
+  note,
 }: {
   icon: LucideIcon;
   label: string;
   value: string;
+  note?: string;
 }) {
   return (
     <Card className="rounded-lg border bg-card shadow-soft">
@@ -308,6 +341,9 @@ function MetricCard({
         <div>
           <p className="text-sm text-muted-foreground">{label}</p>
           <p className="text-2xl font-semibold">{value}</p>
+          {note ? (
+            <p className="text-xs text-muted-foreground">{note}</p>
+          ) : null}
         </div>
       </CardContent>
     </Card>

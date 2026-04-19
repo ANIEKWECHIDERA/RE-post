@@ -209,6 +209,16 @@ async function processPublishJob(supabase: AdminClient, job: PublishJob) {
     message: `${succeeded} target(s) succeeded, ${failed} target(s) failed, ${retryScheduled} target(s) queued for retry.`,
   });
 
+  if (succeeded > 0) {
+    // A streak counts once per creator day when at least one target publishes.
+    // Multi-platform posts should feel like one creator win, not inflated math.
+    await supabase.rpc('record_publish_streak_success', {
+      user_id_input: post.user_id,
+      post_id_input: post.id,
+      occurred_at_input: new Date().toISOString(),
+    });
+  }
+
   return { succeeded, failed, retryScheduled };
 }
 

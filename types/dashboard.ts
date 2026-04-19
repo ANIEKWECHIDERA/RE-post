@@ -3,6 +3,7 @@ import type {
   PostStatus,
   SocialPlatform,
 } from '@/types/database';
+import type { StreakStatus } from '@/types/streaks';
 
 export type DashboardActivityItem = {
   id: string;
@@ -24,6 +25,7 @@ export type ScheduledPostQueueItem = {
 export type DashboardSummary = {
   currentStreak: number;
   longestStreak: number;
+  streakStatus: StreakStatus;
   postsThisWeek: number;
   scheduledPosts: number;
   connectedPlatforms: number;

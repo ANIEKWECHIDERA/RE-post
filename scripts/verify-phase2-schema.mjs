@@ -25,6 +25,9 @@ const hardeningMigrationPath = resolve(
 const tokenLifecycleMigrationPath = resolve(
   'supabase/migrations/202604190008_repost_v2_phase6_token_lifecycle.sql',
 );
+const cronDeploymentMigrationPath = resolve(
+  'supabase/migrations/202604190009_repost_v2_phase8_cron_deployment.sql',
+);
 const sql = readFileSync(migrationPath, 'utf8');
 const realtimeSql = readFileSync(realtimeMigrationPath, 'utf8');
 const connectionSql = readFileSync(connectionMigrationPath, 'utf8');
@@ -33,6 +36,7 @@ const schedulingSql = readFileSync(schedulingMigrationPath, 'utf8');
 const streakSql = readFileSync(streakMigrationPath, 'utf8');
 const hardeningSql = readFileSync(hardeningMigrationPath, 'utf8');
 const tokenLifecycleSql = readFileSync(tokenLifecycleMigrationPath, 'utf8');
+const cronDeploymentSql = readFileSync(cronDeploymentMigrationPath, 'utf8');
 
 const requiredTables = [
   'profiles',
@@ -169,6 +173,19 @@ for (const tokenLifecyclePart of [
 ]) {
   if (!tokenLifecycleSql.includes(tokenLifecyclePart)) {
     missing.push(`token-lifecycle:${tokenLifecyclePart}`);
+  }
+}
+
+for (const cronDeploymentPart of [
+  'pg_net',
+  'pg_cron',
+  'invoke_publish_worker_cron',
+  'repost_publish_worker_function_url',
+  'repost_publish_worker_function_jwt',
+  'net.http_post',
+]) {
+  if (!cronDeploymentSql.includes(cronDeploymentPart)) {
+    missing.push(`cron-deployment:${cronDeploymentPart}`);
   }
 }
 

@@ -43,6 +43,7 @@ Notes:
 - `PUBLISH_PROVIDER_MODE=mock` can test the internal publishing flow without real provider calls.
 - `PUBLISH_PROVIDER_MODE=live` enables real provider adapter calls from the server-side worker.
 - Live Facebook and Instagram publishing still require Page/professional-account selection and provider app review before real-account use.
+- The Supabase `publish-worker` Edge Function also needs `PUBLISH_WORKER_URL` and `PUBLISH_WORKER_SECRET` configured as Edge Function secrets before cron can execute real jobs.
 
 ## Run
 
@@ -93,6 +94,8 @@ Remote migrations applied through Supabase MCP:
 - `repost_v2_phase8_scheduling`
 - `repost_v2_phase9_streak_engine`
 - `repost_v2_phase12_hardening`
+- `repost_v2_phase6_token_lifecycle`
+- `repost_v2_phase8_cron_deployment`
 
 The local `SUPABASE_ACCESS_TOKEN` value is still not accepted by the Supabase CLI as a valid `sbp_...` token, so Supabase MCP is currently the working remote migration path.
 
@@ -105,19 +108,38 @@ POST /api/publish/run
 Authorization: Bearer <PUBLISH_WORKER_SECRET>
 ```
 
-Optional Supabase Edge Function scaffold:
+Supabase Edge Function:
 
 ```text
 supabase/functions/publish-worker/index.ts
 ```
 
-The function forwards scheduled cron calls to the Next.js worker endpoint.
+The function is deployed as `publish-worker` with JWT verification enabled. It forwards scheduled cron calls to the Next.js worker endpoint.
+
+Cron install runbook:
+
+```text
+supabase/sql/repost_publish_worker_cron.sql
+```
+
+Before scheduling cron:
+
+1. Deploy the Next.js app so `POST /api/publish/run` is publicly reachable.
+2. Set Edge Function secrets:
+   - `PUBLISH_WORKER_URL`
+   - `PUBLISH_WORKER_SECRET`
+3. Add Supabase Vault secrets:
+   - `repost_publish_worker_function_url`
+   - `repost_publish_worker_function_jwt`
+4. Schedule `public.invoke_publish_worker_cron(10)` every minute through the SQL runbook.
 
 ## Known Limitations
 
 - LinkedIn text/image adapter code exists, but real-account validation still requires approved credentials and `PUBLISH_PROVIDER_MODE=live`.
 - Facebook and Instagram adapter code exists, but Page/professional-account selection is still pending before current connected accounts can publish.
+- The cron helper and Edge Function are deployed, but the recurring cron job should not be installed until production app URL, Edge Function secrets, and Vault secrets are configured.
 - Provider-native analytics are not live.
 - Scheduled rollup analytics are not populated yet.
-- Supabase advisor still reports `citext` installed in `public`; moving it requires a careful compatibility migration.
+- Supabase advisor still reports `citext` and `pg_net` installed in `public`; `pg_net` does not support `ALTER EXTENSION ... SET SCHEMA`, so treat it as a known platform warning unless Supabase provides a supported move path.
+- Supabase Auth leaked password protection is disabled; enable it before production.
 - Playwright user-flow coverage is a smoke test only; broader media upload, scheduling, realtime multi-tab, and provider OAuth flows still need dedicated tests.

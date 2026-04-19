@@ -16,6 +16,8 @@ Make scheduling a real system instead of a timestamp field. Scheduled publishing
 - Added scheduled queue data to the dashboard summary.
 - Added dashboard scheduled queue UI with cancel controls.
 - Added `supabase/functions/publish-worker/index.ts` as the Supabase Cron target scaffold.
+- Navigation expansion Phase 8 later deployed this Edge Function through Supabase MCP with `verify_jwt=true`.
+- Navigation expansion Phase 8 added `public.invoke_publish_worker_cron(...)`, Vault-backed cron invocation, and `supabase/sql/repost_publish_worker_cron.sql`.
 - Updated the publishing engine to skip/cancel jobs whose post is no longer publishable.
 - Added scheduler-specific indexes for upcoming scheduled posts and worker recovery.
 - Added `PUBLISH_WORKER_URL` to env validation/template for the Edge Function forwarding path.
@@ -48,29 +50,29 @@ It returns `false` if the post is already claimed, running, succeeded, missing, 
 
 The recommended hosted path is:
 
-1. Deploy `supabase/functions/publish-worker`.
+1. Deploy `supabase/functions/publish-worker` with JWT verification enabled.
 2. Set Edge Function secrets:
    - `PUBLISH_WORKER_URL`
    - `PUBLISH_WORKER_SECRET`
-3. Use Supabase Cron plus `pg_net` to invoke the Edge Function every minute.
+3. Store cron invocation values in Supabase Vault:
+   - `repost_publish_worker_function_url`
+   - `repost_publish_worker_function_jwt`
+4. Use Supabase Cron plus `pg_net` to invoke the Edge Function every minute.
 
-Example SQL for later, after functions/secrets are deployed:
+The current runbook lives at:
+
+```text
+supabase/sql/repost_publish_worker_cron.sql
+```
+
+Core cron command after functions/secrets are deployed:
 
 ```sql
-select
-  cron.schedule(
-    'repost-publish-worker-every-minute',
-    '* * * * *',
-    $$
-    select
-      net.http_post(
-        url := '<SUPABASE_FUNCTION_URL>/publish-worker',
-        headers := jsonb_build_object('Content-Type', 'application/json'),
-        body := jsonb_build_object('limit', 10),
-        timeout_milliseconds := 10000
-      );
-    $$
-  );
+select cron.schedule(
+  'repost-publish-worker-every-minute',
+  '* * * * *',
+  $$ select public.invoke_publish_worker_cron(10); $$
+);
 ```
 
 The app also keeps `POST /api/publish/run` available for manual or external scheduler invocation.
@@ -87,7 +89,7 @@ codex mcp list
 
 `codex mcp list` reports Supabase as enabled with OAuth auth.
 
-This running agent session still does not expose Supabase MCP tools in its current tool list, so migrations were not pushed through MCP during this phase.
+MCP is now available in this agent session. The cron deployment migration was applied remotely and the Edge Function was deployed through MCP during navigation expansion Phase 8.
 
 ## Tests And Checks
 
@@ -112,8 +114,7 @@ Production-minded foundation:
 
 Scaffolded:
 
-- actual Supabase Cron job installation
-- Edge Function deployment
+- recurring Supabase Cron job installation after production secrets are set
 - live cancellation verification against the hosted database
 - provider-specific publishing calls
 

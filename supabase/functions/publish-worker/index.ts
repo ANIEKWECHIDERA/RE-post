@@ -23,9 +23,10 @@ Deno.serve(async request => {
   const body = await safeJson(request);
   const limit = normalizeLimit(body.limit);
 
-  // This Edge Function is the Supabase Cron target. It forwards to the
-  // Next.js worker so the publishing engine has one execution path whether it
-  // is triggered manually, by cron, or by a future queue runner.
+  // This Edge Function is the Supabase Cron target and is deployed with JWT
+  // verification. It forwards to the Next.js worker so the publishing engine
+  // has one execution path whether it is triggered manually, by cron, or by a
+  // future queue runner.
   const response = await fetch(workerUrl, {
     method: 'POST',
     headers: {

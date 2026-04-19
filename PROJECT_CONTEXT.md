@@ -32,6 +32,7 @@ Current completed phases:
 - Navigation expansion Phase 5: Provider OAuth callback flow for LinkedIn, Facebook, and Instagram. See `docs/REPOST_V2_NAV_PHASE5.md`.
 - Navigation expansion Phase 6: Encrypted active token persistence, token lifecycle metadata, and publishing-engine token retrieval. See `docs/REPOST_V2_NAV_PHASE6.md`.
 - Navigation expansion Phase 7: Real provider adapter modules for LinkedIn, Facebook, and Instagram behind live mode. See `docs/REPOST_V2_NAV_PHASE7.md`.
+- Navigation expansion Phase 8: Supabase Cron deployment helper, JWT-protected Edge Function deployment, and private cron install runbook. See `docs/REPOST_V2_NAV_PHASE8.md`.
 
 ## Product Direction
 
@@ -148,7 +149,7 @@ Notes:
 - `SUPABASE_SERVICE_ROLE_KEY` must only be used in server-only contexts.
 - `TOKEN_ENCRYPTION_KEY` encrypts third-party provider access/refresh tokens before database persistence.
 - `PUBLISH_WORKER_SECRET` protects the server-side publish worker endpoint.
-- `PUBLISH_WORKER_URL` is used by the optional Supabase Edge Function cron target.
+- `PUBLISH_WORKER_URL` is used by the Supabase Edge Function cron target.
 - `PUBLISH_PROVIDER_MODE=disabled` is the safe default; use `mock` for engine flow testing and `live` only for controlled provider-account validation.
 
 ## Active Structure
@@ -262,7 +263,9 @@ public/images/
 - `supabase/migrations/202604190006_repost_v2_phase9_streak_engine.sql`: Streak transition function and search-path hardening.
 - `supabase/migrations/202604190007_repost_v2_phase12_hardening.sql`: Advisor-driven foreign-key indexes.
 - `supabase/migrations/202604190008_repost_v2_phase6_token_lifecycle.sql`: Token lifecycle audit fields and active-token expiry index.
-- `supabase/functions/publish-worker/index.ts`: Optional Supabase Edge Function cron target that forwards to the Next.js worker.
+- `supabase/migrations/202604190009_repost_v2_phase8_cron_deployment.sql`: Cron helper, `pg_net`/`pg_cron` enablement, and Vault-backed Edge Function invocation.
+- `supabase/functions/publish-worker/index.ts`: JWT-protected Supabase Edge Function cron target that forwards to the Next.js worker.
+- `supabase/sql/repost_publish_worker_cron.sql`: Private runbook for Vault secrets and recurring cron job installation.
 - `supabase/tests/phase2_rls_smoke.sql`: Ownership/RLS smoke test for a real Supabase database.
 - `scripts/verify-phase2-schema.mjs`: Local schema coverage verifier.
 - `tests/e2e/repost-smoke.spec.ts`: Playwright authenticated smoke test for dashboard, composer, and navigation.
@@ -290,6 +293,7 @@ public/images/
 - `docs/REPOST_V2_NAV_PHASE5.md`: Navigation expansion Phase 5 OAuth callback implementation record.
 - `docs/REPOST_V2_NAV_PHASE6.md`: Navigation expansion Phase 6 secure token persistence implementation record.
 - `docs/REPOST_V2_NAV_PHASE7.md`: Navigation expansion Phase 7 real provider adapter implementation record.
+- `docs/REPOST_V2_NAV_PHASE8.md`: Navigation expansion Phase 8 cron deployment implementation record.
 
 ## Security Principles
 
@@ -305,7 +309,7 @@ public/images/
 
 ## Current Known Limitations
 
-- Supabase env vars are present in `.env`, and Phases 2, 4, 6, 7, 8, 9, 12, and navigation expansion Phase 6 have been applied remotely through Supabase MCP.
+- Supabase env vars are present in `.env`, and Phases 2, 4, 6, 7, 8, 9, 12, and navigation expansion Phases 6 and 8 have been applied remotely through Supabase MCP.
 - Auth routes and server actions are implemented. Playwright now covers confirmed-user sign-in and app navigation against the remote project.
 - Dashboard data path is implemented, but unauthenticated smoke tests correctly return `401` for `/api/dashboard/summary`.
 - Realtime subscription code and publication migration are implemented, but live realtime verification needs an authenticated user.
@@ -314,21 +318,23 @@ public/images/
 - Social connection architecture now includes provider redirect/callback token exchange, encrypted token persistence, token lifecycle audit metadata, and server-only active token retrieval. Provider page/account selection, provider app review, and real-account refresh validation are still pending.
 - Publishing engine job processing is implemented and now consumes decrypted provider tokens and prepared media through a server-only boundary. Live provider calls are available only with `PUBLISH_PROVIDER_MODE=live`.
 - LinkedIn text/image adapter code is implemented. Facebook and Instagram adapter code is implemented but current OAuth records still need Page/professional-account selection before they can publish.
-- `POST /api/publish/run` exists and requires `PUBLISH_WORKER_SECRET`; it is ready for cron/worker invocation.
+- `POST /api/publish/run` exists and requires `PUBLISH_WORKER_SECRET`; the JWT-protected `publish-worker` Supabase Edge Function is deployed and forwards cron calls to it.
+- The recurring Supabase Cron job is not installed yet; install it only after the deployed Next.js app URL, Edge Function secrets, and Vault secrets are configured.
 - Scheduling is implemented in source with timezone-aware conversion and cancellation.
-- Supabase CLI token push remains blocked by the invalid `SUPABASE_ACCESS_TOKEN`, but Supabase MCP migration apply now works and was used successfully.
+- Supabase CLI token push remains blocked by the invalid `SUPABASE_ACCESS_TOKEN`, but Supabase MCP migration apply and Edge Function deploy now work and were used successfully.
 - Streak calculation is implemented, but automated missed-day materialization and streak history visualization are pending later phases.
 - Real-time activity feed is implemented on the dashboard, but a dedicated activity history page, event grouping, and user-level noise controls are pending.
 - Basic analytics are implemented from live operational tables, but provider-native performance metrics and scheduled rollups are pending.
-- Supabase security advisor currently reports `extension_in_public` for `citext`; the mutable function search path warning was fixed in Phase 9.
+- Supabase security advisor currently reports `extension_in_public` for `citext` and `pg_net`; `pg_net` does not support `ALTER EXTENSION ... SET SCHEMA`, so keep this as a known Supabase platform warning for now. The mutable function search path warning was fixed in Phase 9.
+- Supabase security advisor reports leaked password protection is disabled in Auth; enable it from Supabase Auth settings before production.
 - Supabase performance advisor foreign-key index warnings were addressed in Phase 12. Unused-index warnings are expected while the database has no real workload.
 
 ## Next Phase
 
 Recommended next work:
 
-- Supabase cron deployment for the publish worker
 - controlled real-account provider integration validation
+- recurring cron job installation after production secrets are configured
 - provider-native analytics ingestion
 
 ## Documentation Maintenance Rules
@@ -374,3 +380,4 @@ Recommended next work:
 - Marked navigation expansion Phase 4 analytics foundations as already implemented and completed Phase 5 by adding provider OAuth redirects/callbacks, state verification, token exchange, profile lookup, encrypted connection persistence, and updated connection UX copy.
 - Completed navigation expansion Phase 6 by adding token lifecycle metadata, applying the token lifecycle migration through Supabase MCP, adding a server-only active token store with refresh attempts and normalized token failures, and wiring the publishing engine to retrieve decrypted provider tokens only inside the server boundary.
 - Completed navigation expansion Phase 7 by adding `PUBLISH_PROVIDER_MODE=live`, server-only media preparation, real LinkedIn text/image publishing, Facebook Page text/image adapter code, Instagram professional-account image adapter code, provider HTTP error normalization, and docs that mark Page/professional-account selection as pending.
+- Completed navigation expansion Phase 8 by applying the cron deployment migration through Supabase MCP, enabling `pg_net` and `pg_cron`, adding `public.invoke_publish_worker_cron(...)`, deploying the JWT-protected `publish-worker` Edge Function, and adding the private Vault/cron SQL runbook.

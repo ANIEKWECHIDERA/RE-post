@@ -531,6 +531,12 @@ export type Database = {
         };
         Returns: Database['public']['Tables']['publish_jobs']['Row'][];
       };
+      invoke_publish_worker_cron: {
+        Args: {
+          limit_input?: number;
+        };
+        Returns: number;
+      };
       record_publish_streak_success: {
         Args: {
           user_id_input: string;

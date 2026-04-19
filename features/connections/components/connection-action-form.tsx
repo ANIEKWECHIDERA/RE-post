@@ -28,7 +28,7 @@ export function PrepareConnectionForm({
     <form action={action} className="grid gap-2">
       <input name="platform" type="hidden" value={platform} />
       <Button className="rounded-md" disabled={disabled || pending} type="submit">
-        {pending ? "Preparing..." : "Prepare OAuth"}
+        {pending ? "Starting..." : "Connect"}
       </Button>
       {state.message ? (
         <p className={state.ok ? "text-xs text-primary" : "text-xs text-destructive"}>{state.message}</p>

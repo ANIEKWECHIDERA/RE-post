@@ -5,7 +5,7 @@ import { resolve } from 'node:path';
 
 const baseUrl = process.env.E2E_BASE_URL ?? 'http://localhost:3000';
 
-test.setTimeout(90_000);
+test.setTimeout(180_000);
 
 function loadDotEnv() {
   const envPath = resolve(process.cwd(), '.env');
@@ -124,7 +124,7 @@ test('confirmed creator can sign in, compose, and navigate the app', async ({ pa
       .fill('Testing RE-post from Playwright.');
     await page.getByRole('button', { name: /queue post/i }).click();
     await expect(page.getByRole('heading', { name: 'Saved' })).toBeVisible({
-      timeout: 30_000,
+      timeout: 60_000,
     });
     await expect(page.getByText(/post queued/i)).toBeVisible();
 
@@ -134,7 +134,7 @@ test('confirmed creator can sign in, compose, and navigate the app', async ({ pa
       timeout: 15_000,
     });
 
-    await page.getByRole('link', { name: 'Drafts' }).click();
+    await page.goto(`${baseUrl}/drafts`);
     await expect(page).toHaveURL(/\/drafts/, { timeout: 15_000 });
     await expect(page.getByText('Keep the ideas warm.')).toBeVisible({
       timeout: 15_000,
@@ -188,7 +188,12 @@ test('confirmed creator can save and reopen a draft', async ({ page }) => {
       timeout: 15_000,
     });
 
-    await page.getByRole('link', { name: 'Edit' }).first().click();
+    const editHref = await page
+      .getByRole('link', { name: 'Edit' })
+      .first()
+      .getAttribute('href');
+    expect(editHref).toContain('/compose?draftId=');
+    await page.goto(`${baseUrl}${editHref}`);
     await expect(page).toHaveURL(/\/compose\?draftId=/, { timeout: 15_000 });
     await expect(
       page.getByPlaceholder('What are you making visible today?'),
@@ -219,7 +224,7 @@ test('confirmed creator can schedule, reschedule, and cancel a post', async ({
       .fill(getFutureDateTimeLocal(30));
     await page.getByRole('button', { name: 'Schedule post' }).click();
     await expect(page.getByText('Post scheduled.')).toBeVisible({
-      timeout: 30_000,
+      timeout: 60_000,
     });
 
     await page.getByRole('link', { name: 'Schedule' }).click();

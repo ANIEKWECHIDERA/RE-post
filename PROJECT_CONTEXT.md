@@ -28,6 +28,8 @@ Current completed phases:
 - Navigation expansion Phase 1: Real Schedule, Analytics, and Drafts routes with Supabase-backed read paths. See `docs/REPOST_V2_NAV_PHASE1.md`.
 - Navigation expansion Phase 2: Draft save/edit/open/duplicate/delete lifecycle and Composer draft transitions. See `docs/REPOST_V2_NAV_PHASE2.md`.
 - Navigation expansion Phase 3: Scheduled post edit/reschedule/cancel/duplicate/delete lifecycle. See `docs/REPOST_V2_NAV_PHASE3.md`.
+- Navigation expansion Phase 4: Analytics foundations were already implemented through the real Analytics page. See `docs/REPOST_V2_NAV_PHASE4.md`.
+- Navigation expansion Phase 5: Provider OAuth callback flow for LinkedIn, Facebook, and Instagram. See `docs/REPOST_V2_NAV_PHASE5.md`.
 
 ## Product Direction
 
@@ -240,6 +242,7 @@ public/images/
 - `server/composer/actions.ts`: Server action that creates posts, uploads media, creates platform targets, queues publish jobs, and logs activity.
 - `server/connections/providers.ts`: Provider-specific connection config and readiness.
 - `server/connections/actions.ts`: OAuth state preparation and connection revoke actions.
+- `server/connections/oauth.ts`: Provider OAuth callback verification, code exchange, profile fetch, and encrypted token persistence.
 - `server/security/token-vault.ts`: Server-only AES-GCM helper for provider token encryption.
 - `app/api/health/route.ts`: Health endpoint.
 - `supabase/migrations/202604180001_repost_v2_phase2_schema.sql`: Phase 2 schema/RLS/storage migration.
@@ -273,6 +276,8 @@ public/images/
 - `docs/REPOST_V2_NAV_PHASE1.md`: Navigation expansion Phase 1 implementation record.
 - `docs/REPOST_V2_NAV_PHASE2.md`: Navigation expansion Phase 2 draft lifecycle implementation record.
 - `docs/REPOST_V2_NAV_PHASE3.md`: Navigation expansion Phase 3 scheduled-post lifecycle implementation record.
+- `docs/REPOST_V2_NAV_PHASE4.md`: Navigation expansion Phase 4 analytics-foundation status record.
+- `docs/REPOST_V2_NAV_PHASE5.md`: Navigation expansion Phase 5 OAuth callback implementation record.
 
 ## Security Principles
 
@@ -294,7 +299,7 @@ public/images/
 - Realtime subscription code and publication migration are implemented, but live realtime verification needs an authenticated user.
 - Composer UI and media upload server action are implemented, but live persistence verification needs an authenticated user.
 - Scheduled Posts, Analytics, and Drafts now have real routes and Supabase-backed read paths; their advanced mutations and server-side pagination/filter params are pending later navigation-expansion phases.
-- Social connection architecture is implemented, but provider redirect/callback token exchange is pending.
+- Social connection architecture now includes provider redirect/callback token exchange and encrypted token persistence. Provider page/account selection, token refresh, provider app review, and real publishing adapter usage are still pending.
 - Publishing engine job processing is implemented, but real provider API calls are disabled until OAuth token exchange is complete.
 - `POST /api/publish/run` exists and requires `PUBLISH_WORKER_SECRET`; it is ready for cron/worker invocation.
 - Scheduling is implemented in source with timezone-aware conversion and cancellation.
@@ -356,3 +361,4 @@ Recommended next work:
 - Started the navigation expansion by adding real `/schedule`, `/analytics`, and `/drafts` routes with Supabase-backed query layers, API routes, React Query hooks, realtime invalidation, and route coverage in Playwright.
 - Completed navigation expansion Phase 2 by adding Composer draft saving, draft hydration through `/compose?draftId=...`, draft duplicate/delete actions, draft send/schedule transition support, and split Playwright E2E coverage for route/publish and draft lifecycle flows.
 - Completed navigation expansion Phase 3 by adding scheduled post edit, reschedule, cancel, duplicate-to-draft, terminal delete, date filters, cache refresh after scheduled mutations, and Playwright coverage for scheduled lifecycle.
+- Marked navigation expansion Phase 4 analytics foundations as already implemented and completed Phase 5 by adding provider OAuth redirects/callbacks, state verification, token exchange, profile lookup, encrypted connection persistence, and updated connection UX copy.

@@ -3,6 +3,8 @@
 import { createHash, randomBytes, randomUUID } from 'node:crypto';
 
 import { revalidatePath } from 'next/cache';
+import { redirect } from 'next/navigation';
+import { headers } from 'next/headers';
 
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import {
@@ -55,6 +57,8 @@ export async function prepareConnectionAction(
   const rawState = randomUUID();
   const codeVerifier = randomBytes(32).toString('base64url');
   const stateHash = createHash('sha256').update(rawState).digest('hex');
+  const origin = await getRequestOrigin();
+  const redirectUri = new URL(provider.callbackPath, origin).toString();
 
   const { error } = await supabase.from('connection_oauth_states').insert({
     user_id: user.id,
@@ -74,10 +78,14 @@ export async function prepareConnectionAction(
 
   revalidatePath('/connections');
 
-  return {
-    ok: true,
-    message: `${provider.name} OAuth state is prepared. Redirect/callback exchange is pending provider app setup.`,
-  };
+  const authUrl = new URL(provider.authBaseUrl);
+  authUrl.searchParams.set('response_type', 'code');
+  authUrl.searchParams.set('client_id', String(process.env[provider.clientIdEnv]));
+  authUrl.searchParams.set('redirect_uri', redirectUri);
+  authUrl.searchParams.set('scope', provider.scopes.join(provider.scopeSeparator));
+  authUrl.searchParams.set('state', rawState);
+
+  redirect(authUrl.toString());
 }
 
 export async function revokeConnectionAction(
@@ -137,4 +145,16 @@ export async function revokeConnectionAction(
     ok: true,
     message: 'Connection revoked.',
   };
+}
+
+async function getRequestOrigin() {
+  const headerStore = await headers();
+  const host = headerStore.get('x-forwarded-host') ?? headerStore.get('host');
+  const protocol = headerStore.get('x-forwarded-proto') ?? 'http';
+
+  if (!host) {
+    return 'http://localhost:3000';
+  }
+
+  return `${protocol}://${host}`;
 }

@@ -9,7 +9,10 @@ type ProviderConfig = {
   clientIdEnv: string;
   clientSecretEnv: string;
   scopes: string[];
+  scopeSeparator: ' ' | ',';
   authBaseUrl: string;
+  tokenUrl: string;
+  profileUrl: string;
   callbackPath: string;
   status: "oauth_pending" | "config_missing" | "ready_for_oauth";
 };
@@ -21,7 +24,10 @@ const providerConfigs: Record<Platform, Omit<ProviderConfig, "status">> = {
     clientIdEnv: "LINKEDIN_CLIENT_ID",
     clientSecretEnv: "LINKEDIN_CLIENT_SECRET",
     scopes: ["w_member_social", "openid", "profile"],
+    scopeSeparator: " ",
     authBaseUrl: "https://www.linkedin.com/oauth/v2/authorization",
+    tokenUrl: "https://www.linkedin.com/oauth/v2/accessToken",
+    profileUrl: "https://api.linkedin.com/v2/userinfo",
     callbackPath: "/api/connections/linkedin/callback",
   },
   facebook: {
@@ -30,7 +36,10 @@ const providerConfigs: Record<Platform, Omit<ProviderConfig, "status">> = {
     clientIdEnv: "FACEBOOK_CLIENT_ID",
     clientSecretEnv: "FACEBOOK_CLIENT_SECRET",
     scopes: ["pages_manage_posts", "pages_read_engagement"],
+    scopeSeparator: ",",
     authBaseUrl: "https://www.facebook.com/v20.0/dialog/oauth",
+    tokenUrl: "https://graph.facebook.com/v20.0/oauth/access_token",
+    profileUrl: "https://graph.facebook.com/v20.0/me",
     callbackPath: "/api/connections/facebook/callback",
   },
   instagram: {
@@ -39,7 +48,10 @@ const providerConfigs: Record<Platform, Omit<ProviderConfig, "status">> = {
     clientIdEnv: "INSTAGRAM_CLIENT_ID",
     clientSecretEnv: "INSTAGRAM_CLIENT_SECRET",
     scopes: ["instagram_basic", "instagram_content_publish"],
+    scopeSeparator: ",",
     authBaseUrl: "https://api.instagram.com/oauth/authorize",
+    tokenUrl: "https://api.instagram.com/oauth/access_token",
+    profileUrl: "https://graph.instagram.com/me",
     callbackPath: "/api/connections/instagram/callback",
   },
 };
@@ -60,4 +72,26 @@ export function getProviderConfigs(): ProviderConfig[] {
 
 export function getProviderConfig(platform: Platform) {
   return getProviderConfigs().find((provider) => provider.platform === platform) ?? null;
+}
+
+export function getProviderSecret(platform: Platform) {
+  const env = getServerEnv();
+  const provider = getProviderConfig(platform);
+
+  if (!env || !provider || provider.status !== "ready_for_oauth") {
+    return null;
+  }
+
+  const clientId = env[provider.clientIdEnv as keyof typeof env];
+  const clientSecret = env[provider.clientSecretEnv as keyof typeof env];
+
+  if (!clientId || !clientSecret) {
+    return null;
+  }
+
+  return {
+    provider,
+    clientId,
+    clientSecret,
+  };
 }

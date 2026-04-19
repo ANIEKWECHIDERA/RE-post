@@ -35,12 +35,11 @@ export function ConnectionsDashboard({ data }: { data: ConnectionsPageData }) {
         <CardContent>
           <Alert>
             <ShieldCheck className="h-4 w-4" />
-            <AlertTitle>OAuth is scaffolded, not complete</AlertTitle>
+            <AlertTitle>OAuth callbacks are live</AlertTitle>
             <AlertDescription>
-              Secure state, token encryption, and connection lifecycle
-              boundaries are ready. Provider redirects and callback token
-              exchange come after provider app credentials and review flows are
-              ready.
+              Secure state verification, callback token exchange, and encrypted
+              token persistence are wired. Provider page selection, app review,
+              and real publishing adapters still come later.
             </AlertDescription>
           </Alert>
         </CardContent>
@@ -98,8 +97,7 @@ export function ConnectionsDashboard({ data }: { data: ConnectionsPageData }) {
                 ) : (
                   <p className="flex items-center gap-2 text-xs text-muted-foreground">
                     <Link2 className="h-3.5 w-3.5" />
-                    Credentials found. Redirect/callback exchange remains
-                    pending.
+                    Credentials found. This starts the provider OAuth redirect.
                   </p>
                 )}
               </CardContent>

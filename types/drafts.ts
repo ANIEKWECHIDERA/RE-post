@@ -31,3 +31,10 @@ export type DraftsPageData = {
   drafts: DraftListItem[];
   loadedFromSupabase: boolean;
 };
+
+export type ComposerDraftDetail = {
+  id: string;
+  body: string;
+  platforms: SocialPlatform[];
+  mediaPreviews: DraftMediaPreview[];
+};

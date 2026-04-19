@@ -13,6 +13,12 @@ type ComposerState = {
   togglePlatform: (platform: Platform) => void;
   setScheduleMode: (mode: "now" | "scheduled") => void;
   setScheduledAt: (scheduledAt: string | null) => void;
+  hydrateDraft: (draft: {
+    body: string;
+    selectedPlatforms: Platform[];
+    scheduleMode?: "now" | "scheduled";
+    scheduledAt?: string | null;
+  }) => void;
   reset: () => void;
 };
 
@@ -39,5 +45,15 @@ export const useComposerStore = create<ComposerState>((set) => ({
     }),
   setScheduleMode: (scheduleMode) => set({ scheduleMode }),
   setScheduledAt: (scheduledAt) => set({ scheduledAt }),
+  hydrateDraft: (draft) =>
+    set({
+      body: draft.body,
+      selectedPlatforms:
+        draft.selectedPlatforms.length > 0
+          ? draft.selectedPlatforms
+          : initialState.selectedPlatforms,
+      scheduleMode: draft.scheduleMode ?? initialState.scheduleMode,
+      scheduledAt: draft.scheduledAt ?? null,
+    }),
   reset: () => set(initialState),
 }));

@@ -2,7 +2,7 @@ import 'server-only';
 
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { getBodyPreview, getFirstMediaPreviews } from '@/server/posts/list-helpers';
-import type { DraftsPageData } from '@/types/drafts';
+import type { ComposerDraftDetail, DraftMediaPreview, DraftsPageData } from '@/types/drafts';
 
 export const emptyDraftsPageData: DraftsPageData = {
   drafts: [],
@@ -91,5 +91,53 @@ export async function getDraftsPageData(
         validationState: needsReview ? 'needs_review' : 'ready',
       };
     }),
+  };
+}
+
+export async function getComposerDraftDetail({
+  userId,
+  draftId,
+}: {
+  userId: string;
+  draftId: string;
+}): Promise<ComposerDraftDetail | null> {
+  const supabase = await createSupabaseServerClient();
+
+  if (!supabase) {
+    return null;
+  }
+
+  const { data: post, error } = await supabase
+    .from('posts')
+    .select('id,body,status')
+    .eq('user_id', userId)
+    .eq('id', draftId)
+    .eq('status', 'draft')
+    .is('archived_at', null)
+    .maybeSingle();
+
+  if (error || !post) {
+    return null;
+  }
+
+  const [{ data: targets }, mediaPreviewsByPost] = await Promise.all([
+    supabase
+      .from('post_platform_targets')
+      .select('platform')
+      .eq('user_id', userId)
+      .eq('post_id', draftId),
+    getFirstMediaPreviews(userId, [draftId]),
+  ]);
+
+  const mediaPreview = mediaPreviewsByPost.get(draftId);
+  const mediaPreviews: DraftMediaPreview[] = mediaPreview
+    ? [mediaPreview]
+    : [];
+
+  return {
+    id: post.id,
+    body: post.body,
+    platforms: (targets ?? []).map(target => target.platform),
+    mediaPreviews,
   };
 }

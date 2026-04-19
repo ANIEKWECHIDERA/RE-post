@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
 import { createClient } from '@supabase/supabase-js';
 import { existsSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
@@ -58,7 +58,7 @@ function getSupabaseAdmin() {
   });
 }
 
-test('confirmed creator can sign in, compose, and navigate the app', async ({ page }) => {
+async function createConfirmedTestUser() {
   const unique = `${Date.now()}.${test.info().workerIndex}`;
   const email = `repost.e2e.${unique}@gmail.com`;
   const password = `Repost-${Date.now()}!`;
@@ -77,14 +77,29 @@ test('confirmed creator can sign in, compose, and navigate the app', async ({ pa
   const userId = data.user?.id;
   expect(userId, 'test user should be created').toBeTruthy();
 
+  return {
+    admin,
+    email,
+    password,
+    userId,
+  };
+}
+
+async function signIn(page: Page, email: string, password: string) {
+  await page.goto(`${baseUrl}/sign-in`);
+
+  await page.getByLabel('Email').fill(email);
+  await page.getByLabel('Password').fill(password);
+  await page.getByRole('button', { name: 'Sign in' }).click();
+
+  await expect(page).toHaveURL(/\/dashboard/, { timeout: 15_000 });
+}
+
+test('confirmed creator can sign in, compose, and navigate the app', async ({ page }) => {
+  const { admin, email, password, userId } = await createConfirmedTestUser();
+
   try {
-    await page.goto(`${baseUrl}/sign-in`);
-
-    await page.getByLabel('Email').fill(email);
-    await page.getByLabel('Password').fill(password);
-    await page.getByRole('button', { name: 'Sign in' }).click();
-
-    await expect(page).toHaveURL(/\/dashboard/, { timeout: 15_000 });
+    await signIn(page, email, password);
     await expect(page.getByText('Keep the streak alive.')).toBeVisible({
       timeout: 15_000,
     });
@@ -138,6 +153,40 @@ test('confirmed creator can sign in, compose, and navigate the app', async ({ pa
     await expect(page.getByText('Recent activity')).toBeVisible({
       timeout: 15_000,
     });
+  } finally {
+    if (userId) {
+      await admin.auth.admin.deleteUser(userId);
+    }
+  }
+});
+
+test('confirmed creator can save and reopen a draft', async ({ page }) => {
+  const { admin, email, password, userId } = await createConfirmedTestUser();
+
+  try {
+    await signIn(page, email, password);
+
+    await page.getByRole('link', { name: 'Compose', exact: true }).click();
+    await expect(page).toHaveURL(/\/compose/, { timeout: 15_000 });
+    await page
+      .getByPlaceholder('What are you making visible today?')
+      .fill('Draft saved from Playwright.');
+    await page.getByRole('button', { name: 'Save draft' }).click();
+    await expect(page.getByText('Draft saved.')).toBeVisible({
+      timeout: 30_000,
+    });
+
+    await page.getByRole('link', { name: 'Drafts' }).click();
+    await expect(page).toHaveURL(/\/drafts/, { timeout: 15_000 });
+    await expect(page.getByText('Draft saved from Playwright.')).toBeVisible({
+      timeout: 15_000,
+    });
+
+    await page.getByRole('link', { name: 'Edit' }).first().click();
+    await expect(page).toHaveURL(/\/compose\?draftId=/, { timeout: 15_000 });
+    await expect(
+      page.getByPlaceholder('What are you making visible today?'),
+    ).toHaveValue('Draft saved from Playwright.', { timeout: 15_000 });
   } finally {
     if (userId) {
       await admin.auth.admin.deleteUser(userId);

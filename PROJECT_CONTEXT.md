@@ -25,6 +25,8 @@ Current completed phases:
 - Phase 10: Real-time activity feed presentation, cache-prepend updates, throttled dashboard invalidation, and richer composer events. See `docs/REPOST_V2_PHASE10.md`.
 - Phase 11: Basic analytics scaffolding for total posts, platform spread, weekly output, streak history, and publish success rate. See `docs/REPOST_V2_PHASE11.md`.
 - Phase 12: QA, hardening, setup docs, advisor-driven indexes, final checks, and cleanup. See `docs/REPOST_V2_PHASE12.md`.
+- Navigation expansion Phase 1: Real Schedule, Analytics, and Drafts routes with Supabase-backed read paths. See `docs/REPOST_V2_NAV_PHASE1.md`.
+- Navigation expansion Phase 2: Draft save/edit/open/duplicate/delete lifecycle and Composer draft transitions. See `docs/REPOST_V2_NAV_PHASE2.md`.
 
 ## Product Direction
 
@@ -222,6 +224,7 @@ public/images/
 - `server/scheduled-posts/queries.ts`: Scheduled posts page data query.
 - `server/analytics/queries.ts`: Analytics page data query.
 - `server/drafts/queries.ts`: Drafts page data query.
+- `server/drafts/actions.ts`: Draft duplicate/delete mutations with draft-only ownership checks.
 - `server/posts/list-helpers.ts`: Shared post list preview/media helpers.
 - `app/api/dashboard/summary/route.ts`: Authenticated dashboard summary endpoint.
 - `hooks/use-dashboard-summary.ts`: TanStack Query dashboard summary hook.
@@ -267,6 +270,7 @@ public/images/
 - `docs/REPOST_V2_PHASE12.md`: Phase 12 hardening implementation record.
 - `docs/SETUP.md`: Current setup, environment, migration, worker, and limitation notes.
 - `docs/REPOST_V2_NAV_PHASE1.md`: Navigation expansion Phase 1 implementation record.
+- `docs/REPOST_V2_NAV_PHASE2.md`: Navigation expansion Phase 2 draft lifecycle implementation record.
 
 ## Security Principles
 
@@ -348,3 +352,4 @@ Recommended next work:
 - Added a Playwright authenticated smoke test that creates a temporary confirmed Supabase user, signs in through the UI, queues a text post, navigates the app, and cleans up the user.
 - Re-tested with Playwright MCP, fixed path-aware shell titles/navigation, pinned dashboard date formatting to avoid hydration mismatches, added the favicon metadata/asset, and hardened E2E waits for remote-backed dev runs.
 - Started the navigation expansion by adding real `/schedule`, `/analytics`, and `/drafts` routes with Supabase-backed query layers, API routes, React Query hooks, realtime invalidation, and route coverage in Playwright.
+- Completed navigation expansion Phase 2 by adding Composer draft saving, draft hydration through `/compose?draftId=...`, draft duplicate/delete actions, draft send/schedule transition support, and split Playwright E2E coverage for route/publish and draft lifecycle flows.

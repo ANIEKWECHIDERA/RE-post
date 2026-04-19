@@ -1,6 +1,7 @@
 'use client';
 
 import { Copy, FileText, PenSquare, Send, Trash2 } from 'lucide-react';
+import Link from 'next/link';
 import { useMemo } from 'react';
 
 import { Badge } from '@/components/ui/badge';
@@ -16,6 +17,10 @@ import { useDrafts } from '@/hooks/use-drafts';
 import { usePageRealtime } from '@/hooks/use-page-realtime';
 import { isSupabaseConfigured } from '@/lib/env/public';
 import { platformLabels } from '@/schemas/platform';
+import {
+  deleteDraftAction,
+  duplicateDraftAction,
+} from '@/server/drafts/actions';
 import type { DraftListItem, DraftsPageData } from '@/types/drafts';
 
 export function DraftsPage({
@@ -122,25 +127,35 @@ function DraftCard({ draft }: { draft: DraftListItem }) {
           )}
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button className="rounded-md" size="sm" variant="outline">
-            <PenSquare className="mr-2 h-4 w-4" />
-            Edit
+          <Button asChild className="rounded-md" size="sm" variant="outline">
+            <Link href={`/compose?draftId=${draft.id}`}>
+              <PenSquare className="mr-2 h-4 w-4" />
+              Edit
+            </Link>
           </Button>
-          <Button className="rounded-md" size="sm" variant="outline">
-            <Send className="mr-2 h-4 w-4" />
-            Send
+          <Button asChild className="rounded-md" size="sm" variant="outline">
+            <Link href={`/compose?draftId=${draft.id}`}>
+              <Send className="mr-2 h-4 w-4" />
+              Send
+            </Link>
           </Button>
-          <Button className="rounded-md" size="sm" variant="outline">
-            Schedule
+          <Button asChild className="rounded-md" size="sm" variant="outline">
+            <Link href={`/compose?draftId=${draft.id}`}>Schedule</Link>
           </Button>
-          <Button className="rounded-md" size="sm" variant="outline">
-            <Copy className="mr-2 h-4 w-4" />
-            Duplicate
-          </Button>
-          <Button className="rounded-md" size="sm" variant="outline">
-            <Trash2 className="mr-2 h-4 w-4" />
-            Delete
-          </Button>
+          <form action={duplicateDraftAction}>
+            <input name="draftId" type="hidden" value={draft.id} />
+            <Button className="rounded-md" size="sm" type="submit" variant="outline">
+              <Copy className="mr-2 h-4 w-4" />
+              Duplicate
+            </Button>
+          </form>
+          <form action={deleteDraftAction}>
+            <input name="draftId" type="hidden" value={draft.id} />
+            <Button className="rounded-md" size="sm" type="submit" variant="outline">
+              <Trash2 className="mr-2 h-4 w-4" />
+              Delete
+            </Button>
+          </form>
         </div>
       </CardContent>
     </Card>

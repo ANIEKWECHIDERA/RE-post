@@ -3,11 +3,12 @@
 import {
   AlertCircle,
   CalendarClock,
+  FileText,
   ImagePlus,
   Send,
   Sparkles,
 } from 'lucide-react';
-import { useActionState, useMemo, useState } from 'react';
+import { useActionState, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
@@ -31,10 +32,12 @@ import {
 import { platformLabels, type Platform } from '@/schemas/platform';
 import {
   createComposerPostAction,
+  saveComposerDraftAction,
   type ComposerActionState,
 } from '@/server/composer/actions';
 import { useComposerStore } from '@/stores/composer-store';
 import type { MediaMetadata } from '@/schemas/media';
+import type { ComposerDraftDetail } from '@/types/drafts';
 
 const platforms: Platform[] = ['instagram', 'facebook', 'linkedin'];
 
@@ -43,7 +46,11 @@ const initialState: ComposerActionState = {
   message: '',
 };
 
-export function PostComposer() {
+export function PostComposer({
+  initialDraft = null,
+}: {
+  initialDraft?: ComposerDraftDetail | null;
+}) {
   const {
     body,
     selectedPlatforms,
@@ -53,11 +60,17 @@ export function PostComposer() {
     togglePlatform,
     setScheduleMode,
     setScheduledAt,
+    hydrateDraft,
   } = useComposerStore();
-  const [state, formAction, pending] = useActionState(
+  const [publishState, publishFormAction, publishPending] = useActionState(
     createComposerPostAction,
     initialState,
   );
+  const [draftState, draftFormAction, draftPending] = useActionState(
+    saveComposerDraftAction,
+    initialState,
+  );
+  const hydratedDraftId = useRef<string | null>(null);
   const [mediaItems, setMediaItems] = useState<MediaMetadata[]>([]);
   const [timezone] = useState(
     () => Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
@@ -76,6 +89,20 @@ export function PostComposer() {
     () => derivedMediaItems.flatMap(item => item.warnings),
     [derivedMediaItems],
   );
+  const activeState = draftState.message ? draftState : publishState;
+  const effectiveDraftId = initialDraft?.id ?? draftState.postId ?? null;
+
+  useEffect(() => {
+    if (!initialDraft || hydratedDraftId.current === initialDraft.id) {
+      return;
+    }
+
+    hydratedDraftId.current = initialDraft.id;
+    hydrateDraft({
+      body: initialDraft.body,
+      selectedPlatforms: initialDraft.platforms,
+    });
+  }, [hydrateDraft, initialDraft]);
 
   async function handleMediaChange(files: FileList | null) {
     if (!files) {
@@ -117,7 +144,10 @@ export function PostComposer() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form action={formAction} className="grid gap-6">
+          <form action={publishFormAction} className="grid gap-6">
+            {effectiveDraftId ? (
+              <input name="draftId" type="hidden" value={effectiveDraftId} />
+            ) : null}
             <input name="timezone" type="hidden" value={timezone} />
             <input
               name="mediaMetadata"
@@ -170,6 +200,32 @@ export function PostComposer() {
 
             <div className="grid gap-3">
               <Label htmlFor="media">Media</Label>
+              {initialDraft?.mediaPreviews.length ? (
+                <div className="grid gap-2 rounded-lg border bg-muted/30 p-3">
+                  <p className="text-xs font-medium text-muted-foreground">
+                    Existing draft media
+                  </p>
+                  <div className="flex flex-wrap gap-2">
+                    {initialDraft.mediaPreviews.map(item => (
+                      <div
+                        aria-label="Existing draft media preview"
+                        className="h-16 w-16 rounded-md border bg-cover bg-center"
+                        key={item.id}
+                        role="img"
+                        style={
+                          item.signedUrl
+                            ? { backgroundImage: `url(${item.signedUrl})` }
+                            : undefined
+                        }
+                      />
+                    ))}
+                  </div>
+                  <p className="text-xs text-muted-foreground">
+                    Existing media stays attached. Add files below to attach
+                    more media to this draft.
+                  </p>
+                </div>
+              ) : null}
               <label className="grid cursor-pointer gap-3 rounded-lg border border-dashed bg-muted/40 p-5 text-center">
                 <ImagePlus className="mx-auto h-8 w-8 text-primary" />
                 <span className="text-sm font-medium">
@@ -220,32 +276,44 @@ export function PostComposer() {
               ) : null}
             </div>
 
-            {state.message ? (
-              <Alert variant={state.ok ? 'default' : 'destructive'}>
+            {activeState.message ? (
+              <Alert variant={activeState.ok ? 'default' : 'destructive'}>
                 <AlertCircle className="h-4 w-4" />
                 <AlertTitle>
-                  {state.ok ? 'Saved' : 'Needs attention'}
+                  {activeState.ok ? 'Saved' : 'Needs attention'}
                 </AlertTitle>
-                <AlertDescription>{state.message}</AlertDescription>
+                <AlertDescription>{activeState.message}</AlertDescription>
               </Alert>
             ) : null}
 
-            <Button
-              className="rounded-md"
-              disabled={pending || selectedPlatforms.length === 0}
-              type="submit"
-            >
-              {scheduleMode === 'scheduled' ? (
-                <CalendarClock className="mr-2 h-4 w-4" />
-              ) : (
-                <Send className="mr-2 h-4 w-4" />
-              )}
-              {pending
-                ? 'Saving...'
-                : scheduleMode === 'scheduled'
-                  ? 'Schedule post'
-                  : 'Queue post'}
-            </Button>
+            <div className="flex flex-wrap gap-2">
+              <Button
+                className="rounded-md"
+                disabled={draftPending || selectedPlatforms.length === 0}
+                formAction={draftFormAction}
+                type="submit"
+                variant="outline"
+              >
+                <FileText className="mr-2 h-4 w-4" />
+                {draftPending ? 'Saving draft...' : 'Save draft'}
+              </Button>
+              <Button
+                className="rounded-md"
+                disabled={publishPending || selectedPlatforms.length === 0}
+                type="submit"
+              >
+                {scheduleMode === 'scheduled' ? (
+                  <CalendarClock className="mr-2 h-4 w-4" />
+                ) : (
+                  <Send className="mr-2 h-4 w-4" />
+                )}
+                {publishPending
+                  ? 'Saving...'
+                  : scheduleMode === 'scheduled'
+                    ? 'Schedule post'
+                    : 'Queue post'}
+              </Button>
+            </div>
           </form>
         </CardContent>
       </Card>

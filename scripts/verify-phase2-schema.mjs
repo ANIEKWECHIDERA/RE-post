@@ -19,12 +19,16 @@ const schedulingMigrationPath = resolve(
 const streakMigrationPath = resolve(
   'supabase/migrations/202604190006_repost_v2_phase9_streak_engine.sql',
 );
+const hardeningMigrationPath = resolve(
+  'supabase/migrations/202604190007_repost_v2_phase12_hardening.sql',
+);
 const sql = readFileSync(migrationPath, 'utf8');
 const realtimeSql = readFileSync(realtimeMigrationPath, 'utf8');
 const connectionSql = readFileSync(connectionMigrationPath, 'utf8');
 const publishingSql = readFileSync(publishingMigrationPath, 'utf8');
 const schedulingSql = readFileSync(schedulingMigrationPath, 'utf8');
 const streakSql = readFileSync(streakMigrationPath, 'utf8');
+const hardeningSql = readFileSync(hardeningMigrationPath, 'utf8');
 
 const requiredTables = [
   'profiles',
@@ -133,6 +137,23 @@ if (
   )
 ) {
   missing.push('function:record_publish_streak_success');
+}
+
+for (const hardeningIndex of [
+  'activity_events_post_id_idx',
+  'activity_events_post_platform_target_id_idx',
+  'media_variants_user_id_idx',
+  'post_media_assets_media_asset_id_idx',
+  'post_platform_targets_social_connection_id_idx',
+  'publish_attempts_post_platform_target_id_idx',
+  'publish_attempts_user_id_idx',
+  'publish_jobs_post_id_idx',
+  'streak_events_post_id_idx',
+  'streak_state_last_successful_post_id_idx',
+]) {
+  if (!hardeningSql.includes(hardeningIndex)) {
+    missing.push(`index:${hardeningIndex}`);
+  }
 }
 
 for (const realtimeTable of [

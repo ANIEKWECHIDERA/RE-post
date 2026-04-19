@@ -23,8 +23,8 @@ export function validatePublishReadiness(input: PublishReadinessInput) {
   }
 
   // Publishing remains server-only because provider tokens, final payloads, and
-  // retry state must never be assembled in the browser. The Phase 7 worker uses
-  // this same boundary and keeps provider execution out of client code.
+  // retry state must never be assembled in the browser. The worker uses this
+  // same boundary and keeps provider execution out of client code.
   return {
     ready: true,
     issues: parsed.data.media.flatMap(asset => asset.warnings),

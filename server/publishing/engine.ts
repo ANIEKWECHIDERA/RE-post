@@ -51,7 +51,7 @@ export async function runPublishEngine({
 
   if (error) {
     throw new Error(
-      'Publish jobs could not be claimed. Confirm Phase 7 migrations are applied.',
+      'Publish jobs could not be claimed. Confirm database migrations are applied.',
     );
   }
 

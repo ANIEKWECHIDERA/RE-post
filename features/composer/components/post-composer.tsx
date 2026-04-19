@@ -108,7 +108,7 @@ export function PostComposer() {
       <Card className="rounded-lg shadow-soft">
         <CardHeader>
           <Badge className="w-fit rounded-md" variant="outline">
-            Phase 5 composer
+            Composer
           </Badge>
           <CardTitle className="text-3xl">Build the next post</CardTitle>
           <CardDescription>
@@ -273,9 +273,9 @@ export function PostComposer() {
                 <div className="rounded-lg border p-3" key={item.fileName}>
                   <p className="text-sm font-medium">{item.fileName}</p>
                   <p className="mt-1 text-xs text-muted-foreground">
-                    {item.kind} · {formatBytes(item.byteSize)}
+                    {item.kind} / {formatBytes(item.byteSize)}
                     {item.width && item.height
-                      ? ` · ${item.width}x${item.height}`
+                      ? ` / ${item.width}x${item.height}`
                       : ''}
                   </p>
                 </div>

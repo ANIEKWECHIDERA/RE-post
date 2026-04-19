@@ -52,9 +52,9 @@ export async function publishToProvider(
     };
   }
 
-  // Real provider calls intentionally remain out of Phase 7 until OAuth callback
-  // exchange can create active connections with encrypted tokens. The engine is
-  // still useful now because it proves queue, attempt, retry, and status flow.
+  // Real provider calls intentionally remain disabled until OAuth callback
+  // exchange can create active connections with encrypted tokens. The engine
+  // still proves queue, attempt, retry, and status flow without exposing tokens.
   throw new ProviderPublishError({
     code: 'provider_adapter_disabled',
     message: `${input.platform} publishing is not enabled yet.`,

@@ -1,19 +1,19 @@
-import { BarChart3, CalendarDays, Home, Link2, PenSquare } from "lucide-react";
-import Link from "next/link";
+import { BarChart3, CalendarDays, Home, Link2, PenSquare } from 'lucide-react';
+import Link from 'next/link';
 
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Separator } from "@/components/ui/separator";
-import { cn } from "@/lib/utils";
-import { signOutAction } from "@/server/auth/actions";
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Separator } from '@/components/ui/separator';
+import { cn } from '@/lib/utils';
+import { signOutAction } from '@/server/auth/actions';
 
 const navItems = [
-  { label: "Home", href: "/dashboard", icon: Home, active: true },
-  { label: "Compose", href: "/compose", icon: PenSquare, active: false },
-  { label: "Schedule", href: "/dashboard", icon: CalendarDays, active: false },
-  { label: "Connections", href: "/connections", icon: Link2, active: false },
-  { label: "Analytics", href: "/dashboard", icon: BarChart3, active: false },
+  { label: 'Home', href: '/dashboard', icon: Home, active: true },
+  { label: 'Compose', href: '/compose', icon: PenSquare, active: false },
+  { label: 'Schedule', href: '/dashboard', icon: CalendarDays, active: false },
+  { label: 'Connections', href: '/connections', icon: Link2, active: false },
+  { label: 'Analytics', href: '/dashboard', icon: BarChart3, active: false },
 ];
 
 export function AppShell({
@@ -26,13 +26,19 @@ export function AppShell({
     displayName: string;
   };
 }) {
+  const today = new Intl.DateTimeFormat('en-US', {
+    dateStyle: 'full',
+  }).format(new Date());
+
   return (
     <div className="min-h-screen bg-background">
       <aside className="fixed inset-y-0 left-0 hidden w-72 border-r bg-card px-5 py-6 lg:block">
         <div className="flex items-center justify-between">
           <div>
             <p className="text-lg font-semibold">RE-post</p>
-            <p className="text-xs text-muted-foreground">Creator command center</p>
+            <p className="text-xs text-muted-foreground">
+              Creator command center
+            </p>
           </div>
           <Badge className="rounded-md" variant="secondary">
             v2
@@ -42,15 +48,16 @@ export function AppShell({
         <Separator className="my-6" />
 
         <nav className="grid gap-2">
-          {navItems.map((item) => (
+          {navItems.map(item => (
             <Link
               key={item.label}
               href={item.href}
+              aria-current={item.active ? 'page' : undefined}
               className={cn(
-                "flex items-center gap-3 rounded-md px-3 py-2 text-left text-sm transition-colors",
+                'flex items-center gap-3 rounded-md px-3 py-2 text-left text-sm transition-colors',
                 item.active
-                  ? "bg-primary text-primary-foreground"
-                  : "text-muted-foreground hover:bg-muted hover:text-foreground",
+                  ? 'bg-primary text-primary-foreground'
+                  : 'text-muted-foreground hover:bg-muted hover:text-foreground',
               )}
             >
               <item.icon className="h-4 w-4" />
@@ -71,12 +78,16 @@ export function AppShell({
         <header className="sticky top-0 z-20 border-b bg-background/95 px-5 py-4 backdrop-blur">
           <div className="mx-auto flex max-w-7xl items-center justify-between gap-4">
             <div>
-              <p className="text-sm text-muted-foreground">Saturday, April 18</p>
+              <p className="text-sm text-muted-foreground">{today}</p>
               <h1 className="text-xl font-semibold">Creator Home</h1>
             </div>
             <div className="flex items-center gap-3">
               <form action={signOutAction}>
-                <Button variant="outline" className="hidden rounded-md sm:inline-flex" type="submit">
+                <Button
+                  variant="outline"
+                  className="hidden rounded-md sm:inline-flex"
+                  type="submit"
+                >
                   Sign out
                 </Button>
               </form>

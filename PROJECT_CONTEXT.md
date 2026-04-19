@@ -24,6 +24,7 @@ Current completed phases:
 - Phase 9: Creator timezone-aware streak engine, streak activity events, dashboard streak status, and remote migration push. See `docs/REPOST_V2_PHASE9.md`.
 - Phase 10: Real-time activity feed presentation, cache-prepend updates, throttled dashboard invalidation, and richer composer events. See `docs/REPOST_V2_PHASE10.md`.
 - Phase 11: Basic analytics scaffolding for total posts, platform spread, weekly output, streak history, and publish success rate. See `docs/REPOST_V2_PHASE11.md`.
+- Phase 12: QA, hardening, setup docs, advisor-driven indexes, final checks, and cleanup. See `docs/REPOST_V2_PHASE12.md`.
 
 ## Product Direction
 
@@ -69,7 +70,7 @@ npm install
 Run the app locally:
 
 ```bash
-npm run dev
+npm run dev:all
 ```
 
 Build:
@@ -223,6 +224,7 @@ public/images/
 - `supabase/migrations/202604190004_repost_v2_phase7_publish_claiming.sql`: Publish job claiming RPC with row locking.
 - `supabase/migrations/202604190005_repost_v2_phase8_scheduling.sql`: Scheduled-post cancellation function and scheduler indexes.
 - `supabase/migrations/202604190006_repost_v2_phase9_streak_engine.sql`: Streak transition function and search-path hardening.
+- `supabase/migrations/202604190007_repost_v2_phase12_hardening.sql`: Advisor-driven foreign-key indexes.
 - `supabase/functions/publish-worker/index.ts`: Optional Supabase Edge Function cron target that forwards to the Next.js worker.
 - `supabase/tests/phase2_rls_smoke.sql`: Ownership/RLS smoke test for a real Supabase database.
 - `scripts/verify-phase2-schema.mjs`: Local schema coverage verifier.
@@ -241,6 +243,8 @@ public/images/
 - `docs/REPOST_V2_PHASE9.md`: Phase 9 streak implementation record.
 - `docs/REPOST_V2_PHASE10.md`: Phase 10 realtime activity implementation record.
 - `docs/REPOST_V2_PHASE11.md`: Phase 11 analytics scaffolding implementation record.
+- `docs/REPOST_V2_PHASE12.md`: Phase 12 hardening implementation record.
+- `docs/SETUP.md`: Current setup, environment, migration, worker, and limitation notes.
 
 ## Security Principles
 
@@ -256,7 +260,7 @@ public/images/
 
 ## Current Known Limitations
 
-- Supabase env vars are present in `.env`, and Phases 2, 4, 6, 7, 8, and 9 have been applied remotely through Supabase MCP.
+- Supabase env vars are present in `.env`, and Phases 2, 4, 6, 7, 8, 9, and 12 have been applied remotely through Supabase MCP.
 - Auth routes and server actions are implemented, but live sign up/sign in still needs user-flow testing against the remote project.
 - Dashboard data path is implemented, but unauthenticated smoke tests correctly return `401` for `/api/dashboard/summary`.
 - Realtime subscription code and publication migration are implemented, but live realtime verification needs an authenticated user.
@@ -270,19 +274,18 @@ public/images/
 - Real-time activity feed is implemented on the dashboard, but a dedicated activity history page, event grouping, and user-level noise controls are pending.
 - Basic analytics are implemented from live operational tables, but provider-native performance metrics and scheduled rollups are pending.
 - Supabase security advisor currently reports `extension_in_public` for `citext`; the mutable function search path warning was fixed in Phase 9.
+- Supabase performance advisor foreign-key index warnings were addressed in Phase 12. Unused-index warnings are expected while the database has no real workload.
 
 ## Next Phase
 
-Phase 12 should implement:
+Recommended next work:
 
-- QA, hardening, and cleanup
-- dead code removal
-- security/RLS review
-- error normalization pass
-- fetch-only verification
-- realtime and scheduling behavior checks
-- mobile and accessibility basics
-- setup, architecture, migration, and limitation notes
+- provider OAuth callbacks
+- encrypted active token persistence
+- real LinkedIn/Facebook/Instagram provider adapters
+- Supabase cron deployment for the publish worker
+- end-to-end tests with a real Supabase auth user
+- provider-native analytics ingestion
 
 ## Documentation Maintenance Rules
 
@@ -318,3 +321,4 @@ Phase 12 should implement:
 - Completed Phase 9 in source by adding database-backed streak transitions, publishing-engine streak recording, dashboard streak status messaging, search-path hardening, and Phase 9 docs.
 - Completed Phase 10 in source by adding typed activity presentation, dashboard feed metadata, realtime cache prepending, throttled dashboard invalidation, post/social realtime refreshes, composer post/media activity events, and Phase 10 docs.
 - Completed Phase 11 in source by adding live dashboard analytics for post totals, platform spread, weekly output, streak history, publish success rate, scheduled vs instant posts, and Phase 11 docs.
+- Completed Phase 12 by adding advisor-driven hardening indexes, applying the Phase 12 migration remotely, adding setup docs, cleaning stale product copy, adding `npm run dev:all`, reviewing Supabase advisors, and running final verification/build/audit checks.

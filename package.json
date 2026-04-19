@@ -5,6 +5,7 @@
   "description": "RE-post v2 creator command center built with Next.js, TypeScript, and Supabase.",
   "scripts": {
     "dev": "next dev",
+    "dev:all": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "eslint .",

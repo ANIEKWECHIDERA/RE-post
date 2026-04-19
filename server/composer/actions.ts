@@ -133,7 +133,7 @@ export async function createComposerPostAction(
     return {
       ok: false,
       message:
-        'Post could not be saved. Confirm the Phase 2 migrations are applied.',
+        'Post could not be saved. Confirm database migrations are applied.',
     };
   }
 

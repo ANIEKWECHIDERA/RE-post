@@ -5,6 +5,8 @@ import { resolve } from 'node:path';
 
 const baseUrl = process.env.E2E_BASE_URL ?? 'http://localhost:3000';
 
+test.setTimeout(90_000);
+
 function loadDotEnv() {
   const envPath = resolve(process.cwd(), '.env');
 
@@ -83,26 +85,39 @@ test('confirmed creator can sign in, compose, and navigate the app', async ({ pa
     await page.getByRole('button', { name: 'Sign in' }).click();
 
     await expect(page).toHaveURL(/\/dashboard/, { timeout: 15_000 });
-    await expect(page.getByText('Keep the streak alive.')).toBeVisible();
-    await expect(page.getByText('Analytics pulse')).toBeVisible();
+    await expect(page.getByText('Keep the streak alive.')).toBeVisible({
+      timeout: 15_000,
+    });
+    await expect(page.getByText('Analytics pulse')).toBeVisible({
+      timeout: 15_000,
+    });
 
     await page.getByRole('link', { name: 'Compose', exact: true }).click();
-    await expect(page).toHaveURL(/\/compose/);
-    await expect(page.getByText('Build the next post')).toBeVisible();
+    await expect(page).toHaveURL(/\/compose/, { timeout: 15_000 });
+    await expect(page.getByText('Build the next post')).toBeVisible({
+      timeout: 15_000,
+    });
 
     await page
       .getByPlaceholder('What are you making visible today?')
       .fill('Testing RE-post from Playwright.');
     await page.getByRole('button', { name: /queue post/i }).click();
-    await expect(page.getByText(/post queued/i)).toBeVisible({ timeout: 15_000 });
+    await expect(page.getByRole('heading', { name: 'Saved' })).toBeVisible({
+      timeout: 30_000,
+    });
+    await expect(page.getByText(/post queued/i)).toBeVisible();
 
     await page.getByRole('link', { name: /connections/i }).click();
-    await expect(page).toHaveURL(/\/connections/);
-    await expect(page.getByText('Social accounts')).toBeVisible();
+    await expect(page).toHaveURL(/\/connections/, { timeout: 15_000 });
+    await expect(page.getByText('Social accounts')).toBeVisible({
+      timeout: 15_000,
+    });
 
     await page.getByRole('link', { name: 'Home' }).click();
-    await expect(page).toHaveURL(/\/dashboard/);
-    await expect(page.getByText('Recent activity')).toBeVisible();
+    await expect(page).toHaveURL(/\/dashboard/, { timeout: 15_000 });
+    await expect(page.getByText('Recent activity')).toBeVisible({
+      timeout: 15_000,
+    });
   } finally {
     if (userId) {
       await admin.auth.admin.deleteUser(userId);

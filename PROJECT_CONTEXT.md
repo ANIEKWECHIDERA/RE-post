@@ -187,6 +187,7 @@ public/images/
 - `app/(auth)/sign-in/page.tsx`: Sign-in route.
 - `app/(auth)/sign-up/page.tsx`: Sign-up route.
 - `components/layout/app-shell.tsx`: Main app shell/sidebar/header.
+- `components/layout/app-shell-path-controls.tsx`: Client-side path-aware shell title and active navigation state.
 - `components/auth/auth-form.tsx`: Sign-in/sign-up form bound to server actions.
 - `components/auth/supabase-setup-required.tsx`: No-env setup blocker.
 - `features/dashboard/components/creator-dashboard.tsx`: Current Phase 1 dashboard.
@@ -332,3 +333,4 @@ Recommended next work:
 - Completed Phase 11 in source by adding live dashboard analytics for post totals, platform spread, weekly output, streak history, publish success rate, scheduled vs instant posts, and Phase 11 docs.
 - Completed Phase 12 by adding advisor-driven hardening indexes, applying the Phase 12 migration remotely, adding setup docs, cleaning stale product copy, adding `npm run dev:all`, reviewing Supabase advisors, and running final verification/build/audit checks.
 - Added a Playwright authenticated smoke test that creates a temporary confirmed Supabase user, signs in through the UI, queues a text post, navigates the app, and cleans up the user.
+- Re-tested with Playwright MCP, fixed path-aware shell titles/navigation, pinned dashboard date formatting to avoid hydration mismatches, added the favicon metadata/asset, and hardened E2E waits for remote-backed dev runs.

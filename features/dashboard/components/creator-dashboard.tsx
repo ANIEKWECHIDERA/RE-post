@@ -435,14 +435,14 @@ export function CreatorDashboard({
 }
 
 function formatActivityDate(value: string) {
-  return new Intl.DateTimeFormat(undefined, {
+  return new Intl.DateTimeFormat('en-US', {
     dateStyle: 'medium',
     timeStyle: 'short',
   }).format(new Date(value));
 }
 
 function formatShortDate(value: string) {
-  return new Intl.DateTimeFormat(undefined, {
+  return new Intl.DateTimeFormat('en-US', {
     month: 'short',
     day: 'numeric',
   }).format(new Date(value));

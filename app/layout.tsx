@@ -12,6 +12,10 @@ const inter = Inter({
 export const metadata: Metadata = {
   title: "RE-post v2",
   description: "Creator consistency, scheduling, publishing, and streaks.",
+  icons: {
+    icon: "/favicon.svg",
+    shortcut: "/favicon.svg",
+  },
 };
 
 export default function RootLayout({

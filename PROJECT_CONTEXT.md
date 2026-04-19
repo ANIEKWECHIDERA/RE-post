@@ -23,6 +23,7 @@ Current completed phases:
 - Phase 8: Timezone-aware scheduling, cancelable scheduled queue, worker cron scaffold, and safe reprocessing guards. See `docs/REPOST_V2_PHASE8.md`.
 - Phase 9: Creator timezone-aware streak engine, streak activity events, dashboard streak status, and remote migration push. See `docs/REPOST_V2_PHASE9.md`.
 - Phase 10: Real-time activity feed presentation, cache-prepend updates, throttled dashboard invalidation, and richer composer events. See `docs/REPOST_V2_PHASE10.md`.
+- Phase 11: Basic analytics scaffolding for total posts, platform spread, weekly output, streak history, and publish success rate. See `docs/REPOST_V2_PHASE11.md`.
 
 ## Product Direction
 
@@ -204,7 +205,7 @@ public/images/
 - `server/auth/actions.ts`: Sign up, sign in, and sign out server actions.
 - `server/auth/session.ts`: Server-side user lookup.
 - `server/profiles/bootstrap.ts`: Profile/streak bootstrap repair helper.
-- `server/dashboard/queries.ts`: Server-side dashboard summary query.
+- `server/dashboard/queries.ts`: Server-side dashboard summary and live analytics query.
 - `app/api/dashboard/summary/route.ts`: Authenticated dashboard summary endpoint.
 - `hooks/use-dashboard-summary.ts`: TanStack Query dashboard summary hook.
 - `hooks/use-dashboard-realtime.ts`: Focused Supabase Realtime cache prepend and throttled dashboard invalidation hook.
@@ -226,6 +227,7 @@ public/images/
 - `supabase/tests/phase2_rls_smoke.sql`: Ownership/RLS smoke test for a real Supabase database.
 - `scripts/verify-phase2-schema.mjs`: Local schema coverage verifier.
 - `types/database.ts`: Manual Phase 2 Supabase database type surface.
+- `types/dashboard.ts`: Dashboard, scheduled queue, activity, and analytics summary types.
 - `types/streaks.ts`: Shared streak status types.
 - `docs/REPOST_V2_PHASE0.md`: Architecture and migration plan.
 - `docs/REPOST_V2_PHASE1.md`: Phase 1 implementation record.
@@ -238,6 +240,7 @@ public/images/
 - `docs/REPOST_V2_PHASE8.md`: Phase 8 scheduling implementation record.
 - `docs/REPOST_V2_PHASE9.md`: Phase 9 streak implementation record.
 - `docs/REPOST_V2_PHASE10.md`: Phase 10 realtime activity implementation record.
+- `docs/REPOST_V2_PHASE11.md`: Phase 11 analytics scaffolding implementation record.
 
 ## Security Principles
 
@@ -265,19 +268,21 @@ public/images/
 - Supabase CLI token push remains blocked by the invalid `SUPABASE_ACCESS_TOKEN`, but Supabase MCP migration apply now works and was used successfully.
 - Streak calculation is implemented, but automated missed-day materialization and streak history visualization are pending later phases.
 - Real-time activity feed is implemented on the dashboard, but a dedicated activity history page, event grouping, and user-level noise controls are pending.
+- Basic analytics are implemented from live operational tables, but provider-native performance metrics and scheduled rollups are pending.
 - Supabase security advisor currently reports `extension_in_public` for `citext`; the mutable function search path warning was fixed in Phase 9.
 
 ## Next Phase
 
-Phase 11 should implement:
+Phase 12 should implement:
 
-- analytics scaffolding
-- total posts
-- posts by platform
-- posts by week
-- streak history
-- publish success/failure rate
-- scheduled vs instant posts
+- QA, hardening, and cleanup
+- dead code removal
+- security/RLS review
+- error normalization pass
+- fetch-only verification
+- realtime and scheduling behavior checks
+- mobile and accessibility basics
+- setup, architecture, migration, and limitation notes
 
 ## Documentation Maintenance Rules
 
@@ -312,3 +317,4 @@ Phase 11 should implement:
 - Applied Phases 2, 4, 6, 7, 8, and 9 migrations remotely through Supabase MCP.
 - Completed Phase 9 in source by adding database-backed streak transitions, publishing-engine streak recording, dashboard streak status messaging, search-path hardening, and Phase 9 docs.
 - Completed Phase 10 in source by adding typed activity presentation, dashboard feed metadata, realtime cache prepending, throttled dashboard invalidation, post/social realtime refreshes, composer post/media activity events, and Phase 10 docs.
+- Completed Phase 11 in source by adding live dashboard analytics for post totals, platform spread, weekly output, streak history, publish success rate, scheduled vs instant posts, and Phase 11 docs.

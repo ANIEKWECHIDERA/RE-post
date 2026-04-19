@@ -6,6 +6,37 @@ import type {
 } from '@/types/database';
 import type { StreakStatus } from '@/types/streaks';
 
+export type AnalyticsPlatformItem = {
+  platform: SocialPlatform;
+  total: number;
+  published: number;
+  failed: number;
+};
+
+export type AnalyticsWeekItem = {
+  weekStart: string;
+  posts: number;
+};
+
+export type AnalyticsStreakHistoryItem = {
+  date: string;
+  type: string;
+  count: number;
+};
+
+export type DashboardAnalyticsSummary = {
+  totalPosts: number;
+  instantPosts: number;
+  scheduledPosts: number;
+  publishedPosts: number;
+  successfulTargets: number;
+  failedTargets: number;
+  publishSuccessRate: number;
+  platformBreakdown: AnalyticsPlatformItem[];
+  weeklyPosts: AnalyticsWeekItem[];
+  streakHistory: AnalyticsStreakHistoryItem[];
+};
+
 export type DashboardActivityItem = {
   id: string;
   type: ActivityEventType;
@@ -33,5 +64,6 @@ export type DashboardSummary = {
   connectedPlatforms: number;
   recentActivity: DashboardActivityItem[];
   scheduledQueue: ScheduledPostQueueItem[];
+  analytics: DashboardAnalyticsSummary;
   loadedFromSupabase: boolean;
 };

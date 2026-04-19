@@ -2,13 +2,16 @@
 
 import {
   Activity,
+  BarChart3,
   CalendarClock,
   CalendarX,
   Flame,
   type LucideIcon,
+  Percent,
   Radio,
   Send,
   Sparkles,
+  TrendingUp,
 } from 'lucide-react';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -62,6 +65,10 @@ export function CreatorDashboard({
   useDashboardRealtime({ enabled: supabaseReady, userId });
   const realtimeStatus = supabaseReady && userId ? 'listening' : 'waiting';
   const streakStatus = data.streakStatus;
+  const maxWeeklyPosts = Math.max(
+    1,
+    ...data.analytics.weeklyPosts.map(week => week.posts),
+  );
 
   return (
     <section className="grid gap-6">
@@ -181,6 +188,117 @@ export function CreatorDashboard({
           value={isLoading ? '--' : `${data?.connectedPlatforms ?? 0}/3`}
         />
       </div>
+
+      <Card className="rounded-lg border bg-card shadow-soft">
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <BarChart3 className="h-5 w-5 text-primary" />
+            Analytics pulse
+          </CardTitle>
+          <CardDescription>
+            The signal so far: output, consistency, platform spread, and publish
+            reliability.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="grid gap-6 xl:grid-cols-[320px_1fr_320px]">
+          <div className="grid gap-3">
+            <div className="grid grid-cols-2 gap-3">
+              <AnalyticsStat
+                icon={TrendingUp}
+                label="Total posts"
+                value={data.analytics.totalPosts}
+              />
+              <AnalyticsStat
+                icon={Percent}
+                label="Success rate"
+                value={`${data.analytics.publishSuccessRate}%`}
+              />
+            </div>
+            <div className="rounded-lg border p-4">
+              <p className="text-xs text-muted-foreground">Post timing</p>
+              <div className="mt-3 grid grid-cols-2 gap-3 text-sm">
+                <div>
+                  <p className="text-2xl font-semibold">
+                    {data.analytics.instantPosts}
+                  </p>
+                  <p className="text-xs text-muted-foreground">Instant</p>
+                </div>
+                <div>
+                  <p className="text-2xl font-semibold">
+                    {data.analytics.scheduledPosts}
+                  </p>
+                  <p className="text-xs text-muted-foreground">Scheduled</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="grid gap-3">
+            <p className="text-sm font-medium">Posts by week</p>
+            <div className="grid gap-3">
+              {data.analytics.weeklyPosts.map(week => (
+                <div
+                  className="grid grid-cols-[76px_1fr_32px] items-center gap-3"
+                  key={week.weekStart}
+                >
+                  <span className="text-xs text-muted-foreground">
+                    {formatShortDate(week.weekStart)}
+                  </span>
+                  <span className="h-2 overflow-hidden rounded-full bg-muted">
+                    <span
+                      className="block h-full rounded-full bg-primary"
+                      style={{
+                        width: `${Math.max(week.posts / maxWeeklyPosts, 0.06) * 100}%`,
+                      }}
+                    />
+                  </span>
+                  <span className="text-right text-xs text-muted-foreground">
+                    {week.posts}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          <div className="grid gap-4">
+            <div className="grid gap-3">
+              <p className="text-sm font-medium">Platform spread</p>
+              {data.analytics.platformBreakdown.map(platform => (
+                <div
+                  className="flex items-center justify-between gap-3 rounded-lg border px-3 py-2 text-sm"
+                  key={platform.platform}
+                >
+                  <span>{platformLabels[platform.platform]}</span>
+                  <span className="text-muted-foreground">
+                    {platform.published}/{platform.total} live
+                  </span>
+                </div>
+              ))}
+            </div>
+            <div className="grid gap-2">
+              <p className="text-sm font-medium">Streak history</p>
+              {data.analytics.streakHistory.length > 0 ? (
+                data.analytics.streakHistory.slice(0, 3).map(event => (
+                  <div
+                    className="flex items-center justify-between gap-3 text-sm"
+                    key={`${event.date}-${event.type}`}
+                  >
+                    <span className="text-muted-foreground">
+                      {formatShortDate(event.date)}
+                    </span>
+                    <span>{event.type}</span>
+                    <span className="font-medium">{event.count}</span>
+                  </div>
+                ))
+              ) : (
+                <p className="text-sm text-muted-foreground">
+                  Streak events will appear after successful publishes.
+                </p>
+              )}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
 
       <div className="grid gap-4 lg:grid-cols-[1fr_420px]">
         <Card className="rounded-lg border bg-card shadow-soft">
@@ -321,6 +439,31 @@ function formatActivityDate(value: string) {
     dateStyle: 'medium',
     timeStyle: 'short',
   }).format(new Date(value));
+}
+
+function formatShortDate(value: string) {
+  return new Intl.DateTimeFormat(undefined, {
+    month: 'short',
+    day: 'numeric',
+  }).format(new Date(value));
+}
+
+function AnalyticsStat({
+  icon: Icon,
+  label,
+  value,
+}: {
+  icon: LucideIcon;
+  label: string;
+  value: number | string;
+}) {
+  return (
+    <div className="rounded-lg border p-4">
+      <Icon className="h-5 w-5 text-primary" />
+      <p className="mt-3 text-xs text-muted-foreground">{label}</p>
+      <p className="mt-1 text-2xl font-semibold">{value}</p>
+    </div>
+  );
 }
 
 function ActivityFeedItem({

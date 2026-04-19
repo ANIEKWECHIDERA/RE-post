@@ -22,6 +22,9 @@ const streakMigrationPath = resolve(
 const hardeningMigrationPath = resolve(
   'supabase/migrations/202604190007_repost_v2_phase12_hardening.sql',
 );
+const tokenLifecycleMigrationPath = resolve(
+  'supabase/migrations/202604190008_repost_v2_phase6_token_lifecycle.sql',
+);
 const sql = readFileSync(migrationPath, 'utf8');
 const realtimeSql = readFileSync(realtimeMigrationPath, 'utf8');
 const connectionSql = readFileSync(connectionMigrationPath, 'utf8');
@@ -29,6 +32,7 @@ const publishingSql = readFileSync(publishingMigrationPath, 'utf8');
 const schedulingSql = readFileSync(schedulingMigrationPath, 'utf8');
 const streakSql = readFileSync(streakMigrationPath, 'utf8');
 const hardeningSql = readFileSync(hardeningMigrationPath, 'utf8');
+const tokenLifecycleSql = readFileSync(tokenLifecycleMigrationPath, 'utf8');
 
 const requiredTables = [
   'profiles',
@@ -153,6 +157,18 @@ for (const hardeningIndex of [
 ]) {
   if (!hardeningSql.includes(hardeningIndex)) {
     missing.push(`index:${hardeningIndex}`);
+  }
+}
+
+for (const tokenLifecyclePart of [
+  'token_refreshed_at',
+  'token_last_checked_at',
+  'token_last_refresh_attempt_at',
+  'token_key_version',
+  'social_connections_token_expiry_idx',
+]) {
+  if (!tokenLifecycleSql.includes(tokenLifecyclePart)) {
+    missing.push(`token-lifecycle:${tokenLifecyclePart}`);
   }
 }
 

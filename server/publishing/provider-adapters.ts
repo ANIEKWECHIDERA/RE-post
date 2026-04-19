@@ -11,8 +11,9 @@ export type ProviderPublishInput = {
   body: string;
   connection: {
     id: string;
-    accessTokenCiphertext: string | null;
-    status: string;
+    accessToken: string;
+    providerAccountId: string;
+    scopes: string[];
   } | null;
 };
 
@@ -28,18 +29,10 @@ export async function publishToProvider(
   const env = getServerEnv();
   const mode = env?.PUBLISH_PROVIDER_MODE ?? 'disabled';
 
-  if (!input.connection || input.connection.status !== 'active') {
+  if (!input.connection) {
     throw new ProviderPublishError({
       code: 'connection_missing',
       message: `No active ${input.platform} connection is available.`,
-      retryable: false,
-    });
-  }
-
-  if (!input.connection.accessTokenCiphertext) {
-    throw new ProviderPublishError({
-      code: 'token_missing',
-      message: `The ${input.platform} connection has no encrypted access token.`,
       retryable: false,
     });
   }
@@ -52,9 +45,9 @@ export async function publishToProvider(
     };
   }
 
-  // Real provider calls intentionally remain disabled until OAuth callback
-  // exchange can create active connections with encrypted tokens. The engine
-  // still proves queue, attempt, retry, and status flow without exposing tokens.
+  // Real provider calls are enabled in Phase 7. At this boundary the adapter
+  // receives a decrypted token only inside server-only code; no client component
+  // or API response receives raw provider credentials.
   throw new ProviderPublishError({
     code: 'provider_adapter_disabled',
     message: `${input.platform} publishing is not enabled yet.`,

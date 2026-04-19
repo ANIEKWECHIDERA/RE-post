@@ -3,8 +3,12 @@ import 'server-only';
 import { randomUUID } from 'node:crypto';
 
 import { createSupabaseAdminClient } from '@/lib/supabase/admin';
-import { normalizeProviderError } from '@/server/publishing/errors';
+import {
+  normalizeProviderError,
+  ProviderPublishError,
+} from '@/server/publishing/errors';
 import { publishToProvider } from '@/server/publishing/provider-adapters';
+import { getActiveProviderToken } from '@/server/connections/token-store';
 import type {
   Database,
   PostTargetStatus,
@@ -263,27 +267,27 @@ async function processTarget(
     } satisfies TargetResult;
   }
 
-  const { data: connection } = await supabase
-    .from('social_connections')
-    .select('id,status,access_token_ciphertext')
-    .eq('user_id', post.user_id)
-    .eq('platform', target.platform)
-    .eq('status', 'active')
-    .maybeSingle();
+  const token = await getActiveProviderToken({
+    userId: post.user_id,
+    platform: target.platform,
+  });
 
   try {
+    if (!token.ok) {
+      throw new ProviderTokenPublishError(token);
+    }
+
     const providerResult = await publishToProvider({
       platform: target.platform,
       postId: post.id,
       targetId: target.id,
       body: target.platform_body ?? post.body,
-      connection: connection
-        ? {
-            id: connection.id,
-            status: connection.status,
-            accessTokenCiphertext: connection.access_token_ciphertext,
-          }
-        : null,
+      connection: {
+        id: token.connectionId,
+        accessToken: token.accessToken,
+        providerAccountId: token.providerAccountId,
+        scopes: token.scopes,
+      },
     });
 
     await supabase
@@ -336,6 +340,17 @@ async function processTarget(
       code: normalized.code,
       message: normalized.message,
     } satisfies TargetResult;
+  }
+}
+
+class ProviderTokenPublishError extends ProviderPublishError {
+  constructor(token: Extract<Awaited<ReturnType<typeof getActiveProviderToken>>, { ok: false }>) {
+    super({
+      code: token.code,
+      message: token.message,
+      retryable: token.retryable,
+    });
+    this.name = 'ProviderTokenPublishError';
   }
 }
 

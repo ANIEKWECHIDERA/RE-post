@@ -124,6 +124,10 @@ export type Database = {
           access_token_ciphertext: string | null;
           refresh_token_ciphertext: string | null;
           token_expires_at: Timestamp | null;
+          token_refreshed_at: Timestamp | null;
+          token_last_checked_at: Timestamp | null;
+          token_last_refresh_attempt_at: Timestamp | null;
+          token_key_version: string;
           connected_at: Timestamp | null;
           disconnected_at: Timestamp | null;
           last_error_code: string | null;
@@ -145,6 +149,10 @@ export type Database = {
           access_token_ciphertext?: string | null;
           refresh_token_ciphertext?: string | null;
           token_expires_at?: Timestamp | null;
+          token_refreshed_at?: Timestamp | null;
+          token_last_checked_at?: Timestamp | null;
+          token_last_refresh_attempt_at?: Timestamp | null;
+          token_key_version?: string;
           connected_at?: Timestamp | null;
           disconnected_at?: Timestamp | null;
           last_error_code?: string | null;

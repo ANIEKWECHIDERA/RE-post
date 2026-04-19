@@ -115,6 +115,10 @@ export async function handleProviderOAuthCallback({
           ? encryptSecret(token.refresh_token)
           : null,
         token_expires_at: tokenExpiresAt,
+        token_refreshed_at: null,
+        token_last_checked_at: new Date().toISOString(),
+        token_last_refresh_attempt_at: null,
+        token_key_version: 'v1',
         connected_at: new Date().toISOString(),
         disconnected_at: null,
         last_error_code: null,

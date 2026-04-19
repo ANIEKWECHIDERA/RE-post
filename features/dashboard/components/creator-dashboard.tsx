@@ -23,6 +23,11 @@ import {
   CardTitle,
 } from '@/components/ui/card';
 import { Separator } from '@/components/ui/separator';
+import {
+  getActivityMetadataLabel,
+  getActivityPresentation,
+  getActivityToneClasses,
+} from '@/features/dashboard/activity';
 import { useDashboardRealtime } from '@/hooks/use-dashboard-realtime';
 import { useDashboardSummary } from '@/hooks/use-dashboard-summary';
 import { isSupabaseConfigured } from '@/lib/env/public';
@@ -36,14 +41,12 @@ const emptyActivityItems = [
     title: 'No activity yet',
     message:
       'Your publish wins, uploads, retries, and streak updates will land here.',
-    tone: 'bg-emerald-500',
   },
   {
     id: 'empty-2',
     title: 'Realtime is ready',
     message:
       'Once Supabase is configured, dashboard updates will refresh without a manual reload.',
-    tone: 'bg-cyan-500',
   },
 ];
 
@@ -280,27 +283,26 @@ export function CreatorDashboard({
           </CardHeader>
           <CardContent>
             <div className="grid gap-4">
-              {(data.recentActivity.length > 0
-                ? data.recentActivity.map(item => ({
-                    id: item.id,
-                    title: item.title,
-                    message: item.message ?? formatActivityDate(item.createdAt),
-                    tone: 'bg-primary',
-                  }))
-                : emptyActivityItems
-              ).map(item => (
-                <div key={item.id} className="grid grid-cols-[12px_1fr] gap-3">
-                  <span
-                    className={`mt-1.5 h-2.5 w-2.5 rounded-full ${item.tone}`}
-                  />
-                  <div>
-                    <p className="text-sm font-medium">{item.title}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {item.message}
-                    </p>
-                  </div>
-                </div>
-              ))}
+              {data.recentActivity.length > 0
+                ? data.recentActivity.map(item => (
+                    <ActivityFeedItem item={item} key={item.id} />
+                  ))
+                : emptyActivityItems.map(item => (
+                    <div
+                      key={item.id}
+                      className="grid grid-cols-[36px_1fr] gap-3"
+                    >
+                      <span className="mt-1 flex h-9 w-9 items-center justify-center rounded-md border border-cyan-200 bg-cyan-50 text-cyan-700">
+                        <Sparkles className="h-4 w-4" />
+                      </span>
+                      <div>
+                        <p className="text-sm font-medium">{item.title}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {item.message}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
             </div>
             <Separator className="my-5" />
             <p className="text-sm text-muted-foreground">
@@ -319,6 +321,43 @@ function formatActivityDate(value: string) {
     dateStyle: 'medium',
     timeStyle: 'short',
   }).format(new Date(value));
+}
+
+function ActivityFeedItem({
+  item,
+}: {
+  item: DashboardSummary['recentActivity'][number];
+}) {
+  const presentation = getActivityPresentation(item.type);
+  const Icon = presentation.icon;
+  const metadataLabel = getActivityMetadataLabel(item.metadata);
+
+  return (
+    <div className="grid grid-cols-[36px_1fr] gap-3">
+      <span
+        className={`mt-1 flex h-9 w-9 items-center justify-center rounded-md border ${getActivityToneClasses(
+          presentation.tone,
+        )}`}
+      >
+        <Icon className="h-4 w-4" />
+      </span>
+      <div className="min-w-0">
+        <div className="flex flex-wrap items-center gap-2">
+          <p className="text-sm font-medium">{item.title}</p>
+          <Badge className="rounded-md" variant="outline">
+            {presentation.status}
+          </Badge>
+        </div>
+        <p className="mt-1 text-xs text-muted-foreground">
+          {item.message ?? presentation.label}
+        </p>
+        <div className="mt-2 flex flex-wrap gap-2 text-xs text-muted-foreground">
+          <span>{formatActivityDate(item.createdAt)}</span>
+          {metadataLabel ? <span>{metadataLabel}</span> : null}
+        </div>
+      </div>
+    </div>
+  );
 }
 
 function MetricCard({

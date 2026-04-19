@@ -22,6 +22,7 @@ Current completed phases:
 - Phase 7: Backend-controlled publishing engine, worker route, job claiming, attempts, retries, and provider adapter boundary. See `docs/REPOST_V2_PHASE7.md`.
 - Phase 8: Timezone-aware scheduling, cancelable scheduled queue, worker cron scaffold, and safe reprocessing guards. See `docs/REPOST_V2_PHASE8.md`.
 - Phase 9: Creator timezone-aware streak engine, streak activity events, dashboard streak status, and remote migration push. See `docs/REPOST_V2_PHASE9.md`.
+- Phase 10: Real-time activity feed presentation, cache-prepend updates, throttled dashboard invalidation, and richer composer events. See `docs/REPOST_V2_PHASE10.md`.
 
 ## Product Direction
 
@@ -179,6 +180,7 @@ public/images/
 - `components/auth/auth-form.tsx`: Sign-in/sign-up form bound to server actions.
 - `components/auth/supabase-setup-required.tsx`: No-env setup blocker.
 - `features/dashboard/components/creator-dashboard.tsx`: Current Phase 1 dashboard.
+- `features/dashboard/activity.ts`: Activity event presentation, tone, status, and metadata helpers.
 - `components/providers/app-providers.tsx`: TanStack Query provider.
 - `stores/composer-store.ts`: Zustand composer UI store.
 - `schemas/env.ts`: Zod env schemas.
@@ -205,7 +207,7 @@ public/images/
 - `server/dashboard/queries.ts`: Server-side dashboard summary query.
 - `app/api/dashboard/summary/route.ts`: Authenticated dashboard summary endpoint.
 - `hooks/use-dashboard-summary.ts`: TanStack Query dashboard summary hook.
-- `hooks/use-dashboard-realtime.ts`: Focused Supabase Realtime dashboard invalidation hook.
+- `hooks/use-dashboard-realtime.ts`: Focused Supabase Realtime cache prepend and throttled dashboard invalidation hook.
 - `app/api/publish/run/route.ts`: Secret-protected publishing worker endpoint.
 - `features/composer/components/post-composer.tsx`: Composer UI for text, platforms, media, timing, and warnings.
 - `features/composer/media-validation.ts`: Browser-side media metadata inspection and platform warning logic.
@@ -235,6 +237,7 @@ public/images/
 - `docs/REPOST_V2_PHASE7.md`: Phase 7 publishing engine implementation record.
 - `docs/REPOST_V2_PHASE8.md`: Phase 8 scheduling implementation record.
 - `docs/REPOST_V2_PHASE9.md`: Phase 9 streak implementation record.
+- `docs/REPOST_V2_PHASE10.md`: Phase 10 realtime activity implementation record.
 
 ## Security Principles
 
@@ -261,18 +264,20 @@ public/images/
 - Scheduling is implemented in source with timezone-aware conversion and cancellation.
 - Supabase CLI token push remains blocked by the invalid `SUPABASE_ACCESS_TOKEN`, but Supabase MCP migration apply now works and was used successfully.
 - Streak calculation is implemented, but automated missed-day materialization and streak history visualization are pending later phases.
+- Real-time activity feed is implemented on the dashboard, but a dedicated activity history page, event grouping, and user-level noise controls are pending.
 - Supabase security advisor currently reports `extension_in_public` for `citext`; the mutable function search path warning was fixed in Phase 9.
 
 ## Next Phase
 
-Phase 10 should implement:
+Phase 11 should implement:
 
-- real-time activity system
-- richer event typing and metadata display
-- feed grouping/deduping
-- realtime updates for scheduled queue and streak events
-- visual states for publish started/succeeded/failed/retry/streak changes
-- noise controls so realtime stays useful
+- analytics scaffolding
+- total posts
+- posts by platform
+- posts by week
+- streak history
+- publish success/failure rate
+- scheduled vs instant posts
 
 ## Documentation Maintenance Rules
 
@@ -306,3 +311,4 @@ Phase 10 should implement:
 - Added and authenticated the Codex Supabase MCP server globally; current session visibility still requires a reload before Supabase MCP tools appear to this agent runtime.
 - Applied Phases 2, 4, 6, 7, 8, and 9 migrations remotely through Supabase MCP.
 - Completed Phase 9 in source by adding database-backed streak transitions, publishing-engine streak recording, dashboard streak status messaging, search-path hardening, and Phase 9 docs.
+- Completed Phase 10 in source by adding typed activity presentation, dashboard feed metadata, realtime cache prepending, throttled dashboard invalidation, post/social realtime refreshes, composer post/media activity events, and Phase 10 docs.

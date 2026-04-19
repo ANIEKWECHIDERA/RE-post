@@ -137,6 +137,18 @@ export async function createComposerPostAction(
     };
   }
 
+  await supabase.from('activity_events').insert({
+    user_id: user.id,
+    post_id: postId,
+    type: 'post_created',
+    title: 'Post draft created',
+    message: 'Your post entered the creator queue.',
+    metadata: {
+      scheduleMode: parsed.data.scheduleMode,
+      platforms: parsed.data.platforms,
+    },
+  });
+
   const metadataByName = new Map(
     parsed.data.mediaMetadata
       .map(item => mediaMetadataSchema.safeParse(item))
@@ -209,6 +221,19 @@ export async function createComposerPostAction(
         message: 'Media could not be attached to the post.',
       };
     }
+  }
+
+  if (files.length > 0) {
+    await supabase.from('activity_events').insert({
+      user_id: user.id,
+      post_id: postId,
+      type: 'media_uploaded',
+      title: 'Media uploaded',
+      message: `${files.length} asset(s) are ready for platform checks.`,
+      metadata: {
+        count: files.length,
+      },
+    });
   }
 
   const targetRows = parsed.data.platforms.map(platform => ({

@@ -72,10 +72,10 @@ export async function getDashboardSummary(
       .eq('status', 'active'),
     supabase
       .from('activity_events')
-      .select('id,type,title,message,created_at')
+      .select('id,type,title,message,metadata,created_at')
       .eq('user_id', userId)
       .order('created_at', { ascending: false })
-      .limit(8),
+      .limit(12),
   ]);
 
   if (
@@ -106,6 +106,7 @@ export async function getDashboardSummary(
         type: event.type,
         title: event.title,
         message: event.message,
+        metadata: event.metadata,
         createdAt: event.created_at,
       })) ?? [],
     scheduledQueue: await attachTargetPlatforms(

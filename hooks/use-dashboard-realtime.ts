@@ -1,17 +1,33 @@
-"use client";
+'use client';
 
-import { useQueryClient } from "@tanstack/react-query";
-import { useEffect } from "react";
+import { useQueryClient } from '@tanstack/react-query';
+import { useEffect, useRef } from 'react';
 
-import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import { createSupabaseBrowserClient } from '@/lib/supabase/client';
+import type { DashboardSummary } from '@/types/dashboard';
+import type { ActivityEventType, Json } from '@/types/database';
 
 type DashboardRealtimeOptions = {
   enabled: boolean;
   userId: string | null;
 };
 
-export function useDashboardRealtime({ enabled, userId }: DashboardRealtimeOptions) {
+type RealtimeActivityEvent = {
+  id: string;
+  user_id: string;
+  type: ActivityEventType;
+  title: string;
+  message: string | null;
+  metadata: Json;
+  created_at: string;
+};
+
+export function useDashboardRealtime({
+  enabled,
+  userId,
+}: DashboardRealtimeOptions) {
   const queryClient = useQueryClient();
+  const invalidationTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     if (!enabled || !userId) {
@@ -24,49 +40,113 @@ export function useDashboardRealtime({ enabled, userId }: DashboardRealtimeOptio
       return;
     }
 
-    // Keep the home screen live with only high-signal tables. The activity feed
-    // is the narrative source; streak and target updates refresh summary cards.
+    const invalidateDashboard = () => {
+      if (invalidationTimer.current) {
+        return;
+      }
+
+      invalidationTimer.current = setTimeout(() => {
+        invalidationTimer.current = null;
+        void queryClient.invalidateQueries({
+          queryKey: ['dashboard-summary'],
+        });
+      }, 350);
+    };
+
+    const pushActivityEvent = (event: RealtimeActivityEvent) => {
+      queryClient.setQueryData<DashboardSummary>(
+        ['dashboard-summary'],
+        current => {
+          if (!current) {
+            return current;
+          }
+
+          const nextActivity = [
+            {
+              id: event.id,
+              type: event.type,
+              title: event.title,
+              message: event.message,
+              metadata: event.metadata,
+              createdAt: event.created_at,
+            },
+            ...current.recentActivity.filter(item => item.id !== event.id),
+          ].slice(0, 12);
+
+          return {
+            ...current,
+            recentActivity: nextActivity,
+          };
+        },
+      );
+    };
+
+    // Keep the home screen live with only high-signal tables. Activity events
+    // are the narrative source; target/post/streak updates refresh the summary
+    // without opening one subscription per widget.
     const channel = supabase
       .channel(`dashboard:${userId}`)
       .on(
-        "postgres_changes",
+        'postgres_changes',
         {
-          event: "INSERT",
-          schema: "public",
-          table: "activity_events",
+          event: 'INSERT',
+          schema: 'public',
+          table: 'activity_events',
           filter: `user_id=eq.${userId}`,
         },
-        () => {
-          void queryClient.invalidateQueries({ queryKey: ["dashboard-summary"] });
+        payload => {
+          pushActivityEvent(payload.new as RealtimeActivityEvent);
+          invalidateDashboard();
         },
       )
       .on(
-        "postgres_changes",
+        'postgres_changes',
         {
-          event: "UPDATE",
-          schema: "public",
-          table: "streak_state",
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'streak_state',
           filter: `user_id=eq.${userId}`,
         },
-        () => {
-          void queryClient.invalidateQueries({ queryKey: ["dashboard-summary"] });
-        },
+        invalidateDashboard,
       )
       .on(
-        "postgres_changes",
+        'postgres_changes',
         {
-          event: "UPDATE",
-          schema: "public",
-          table: "post_platform_targets",
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'post_platform_targets',
           filter: `user_id=eq.${userId}`,
         },
-        () => {
-          void queryClient.invalidateQueries({ queryKey: ["dashboard-summary"] });
+        invalidateDashboard,
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'posts',
+          filter: `user_id=eq.${userId}`,
         },
+        invalidateDashboard,
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'social_connections',
+          filter: `user_id=eq.${userId}`,
+        },
+        invalidateDashboard,
       )
       .subscribe();
 
     return () => {
+      if (invalidationTimer.current) {
+        clearTimeout(invalidationTimer.current);
+        invalidationTimer.current = null;
+      }
+
       void supabase.removeChannel(channel);
     };
   }, [enabled, queryClient, userId]);

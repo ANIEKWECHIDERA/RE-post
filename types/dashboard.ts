@@ -1,5 +1,6 @@
 import type {
   ActivityEventType,
+  Json,
   PostStatus,
   SocialPlatform,
 } from '@/types/database';
@@ -10,6 +11,7 @@ export type DashboardActivityItem = {
   type: ActivityEventType;
   title: string;
   message: string | null;
+  metadata: Json;
   createdAt: string;
 };
 

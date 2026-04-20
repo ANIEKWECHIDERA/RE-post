@@ -84,12 +84,16 @@ Current Instagram OAuth scopes in source:
 ```text
 instagram_business_basic
 instagram_business_content_publish
-instagram_manage_comments
+instagram_business_manage_comments
 instagram_business_manage_messages
 ```
 
 `instagram_business_content_publish` is included because RE-post needs publishing
 permissions for the Instagram media container and publish flow.
+
+Do not request the older `instagram_manage_comments` scope from the Instagram
+Business Login URL. Meta currently rejects that combination with
+`Invalid platform app`; use `instagram_business_manage_comments` instead.
 
 ## Tester Account
 

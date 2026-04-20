@@ -416,3 +416,4 @@ Recommended next work:
 - Added `netlify.toml`, Node 22 engine guidance, deployment docs, README deployment notes, and setup docs for Netlify.
 - Updated Instagram setup for the newer Instagram API flow by adding business-login scopes, a dedicated `/api/webhooks/instagram` endpoint, webhook verify-token env support, and setup documentation.
 - Switched Instagram OAuth authorization to the Instagram Business Login endpoint `https://www.instagram.com/oauth/authorize` with `enable_fb_login=0` and `force_authentication=1` to avoid Meta's `Invalid platform app` error from the older authorize host.
+- Replaced `instagram_manage_comments` with `instagram_business_manage_comments` after production Playwright tracing showed the older scope triggers Meta's `Invalid platform app` error in Instagram Business Login.

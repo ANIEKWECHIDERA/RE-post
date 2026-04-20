@@ -51,7 +51,7 @@ const providerConfigs: Record<Platform, Omit<ProviderConfig, "status">> = {
     scopes: [
       "instagram_business_basic",
       "instagram_business_content_publish",
-      "instagram_manage_comments",
+      "instagram_business_manage_comments",
       "instagram_business_manage_messages",
     ],
     scopeSeparator: ",",

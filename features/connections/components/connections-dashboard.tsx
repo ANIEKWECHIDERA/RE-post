@@ -15,6 +15,7 @@ import {
   PrepareConnectionForm,
   RevokeConnectionForm,
 } from '@/features/connections/components/connection-action-form';
+import type { SocialConnectionStatus } from '@/types/database';
 
 type ConnectionsPageData = Awaited<ReturnType<typeof getConnectionPageData>>;
 
@@ -53,6 +54,9 @@ export function ConnectionsDashboard({ data }: { data: ConnectionsPageData }) {
             item => item.platform === provider.platform,
           );
           const ready = provider.status === 'ready_for_oauth';
+          const canUseConnection = connection
+            ? isUsableConnectionStatus(connection.status)
+            : false;
 
           return (
             <Card className="rounded-lg shadow-soft" key={provider.platform}>
@@ -69,7 +73,7 @@ export function ConnectionsDashboard({ data }: { data: ConnectionsPageData }) {
                 </CardDescription>
               </CardHeader>
               <CardContent className="grid gap-4">
-                {connection ? (
+                {connection && canUseConnection ? (
                   <div className="grid gap-2 rounded-lg border p-3 text-sm">
                     <p className="font-medium">
                       {connection.displayName ??
@@ -84,11 +88,24 @@ export function ConnectionsDashboard({ data }: { data: ConnectionsPageData }) {
                     <RevokeConnectionForm connectionId={connection.id} />
                   </div>
                 ) : (
-                  <PrepareConnectionForm
-                    disabled={!ready}
-                    platform={provider.platform as Platform}
-                    providerName={provider.name}
-                  />
+                  <div className="grid gap-3">
+                    {connection ? (
+                      <div className="rounded-lg border border-dashed p-3 text-sm">
+                        <p className="font-medium">
+                          Previous {provider.name} connection is {connection.status}.
+                        </p>
+                        <p className="mt-1 text-xs leading-5 text-muted-foreground">
+                          Tokens were cleared, so start a fresh provider login
+                          to reconnect this account.
+                        </p>
+                      </div>
+                    ) : null}
+                    <PrepareConnectionForm
+                      disabled={!ready}
+                      platform={provider.platform as Platform}
+                      providerName={provider.name}
+                    />
+                  </div>
                 )}
 
                 {!ready ? (
@@ -112,6 +129,10 @@ export function ConnectionsDashboard({ data }: { data: ConnectionsPageData }) {
   );
 }
 
+function isUsableConnectionStatus(status: SocialConnectionStatus) {
+  return status === 'active' || status === 'pending';
+}
+
 function ProviderStatusBadge({
   ready,
   connectionStatus,
@@ -124,6 +145,22 @@ function ProviderStatusBadge({
       <Badge className="rounded-md">
         <CheckCircle2 className="mr-1 h-3.5 w-3.5" />
         active
+      </Badge>
+    );
+  }
+
+  if (connectionStatus === 'revoked') {
+    return (
+      <Badge className="rounded-md" variant="outline">
+        revoked
+      </Badge>
+    );
+  }
+
+  if (connectionStatus === 'expired' || connectionStatus === 'error') {
+    return (
+      <Badge className="rounded-md" variant="destructive">
+        {connectionStatus}
       </Badge>
     );
   }

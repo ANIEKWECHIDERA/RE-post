@@ -36,7 +36,7 @@ const providerConfigs: Record<Platform, Omit<ProviderConfig, "status">> = {
     name: "Facebook",
     clientIdEnv: "FACEBOOK_CLIENT_ID",
     clientSecretEnv: "FACEBOOK_CLIENT_SECRET",
-    scopes: ["pages_manage_posts", "pages_read_engagement"],
+    scopes: ["public_profile", "pages_show_list", "pages_read_engagement"],
     scopeSeparator: ",",
     authBaseUrl: "https://www.facebook.com/v24.0/dialog/oauth",
     tokenUrl: "https://graph.facebook.com/v24.0/oauth/access_token",

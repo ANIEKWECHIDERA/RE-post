@@ -33,8 +33,8 @@ Implemented foundations include:
 
 Provider publishing is intentionally gated. LinkedIn text/image adapter code is
 implemented, while Facebook and Instagram require Page/professional-account
-selection before normal connected accounts can publish. Real provider tests
-should run only in a controlled staging setup.
+selection and additional provider access before normal connected accounts can
+publish. Real provider tests should run only in a controlled staging setup.
 
 ## Tech Stack
 
@@ -235,7 +235,9 @@ Current limitations:
 
 - LinkedIn text/image publishing needs approved credentials and staging
   validation.
-- Facebook publishing requires Page selection and Page-token persistence.
+- Facebook connection uses baseline Page discovery scopes; Facebook Page
+  publishing requires Page selection, Page-token persistence, and
+  `pages_manage_posts` access after Meta setup/app review.
 - Instagram publishing requires a Meta-backed professional account flow.
 - Provider-native engagement analytics are not live yet.
 - Video, carousel, and richer media publishing flows are pending.
@@ -260,6 +262,7 @@ Important docs:
 - [docs/REPOST_V2_NAV_PHASE9.md](./docs/REPOST_V2_NAV_PHASE9.md): latest safe E2E expansion
 - [docs/REPOST_V2_MARKETING_PHASE1.md](./docs/REPOST_V2_MARKETING_PHASE1.md): public landing page implementation notes
 - [docs/NETLIFY_DEPLOYMENT.md](./docs/NETLIFY_DEPLOYMENT.md): Netlify deployment, environment, callback, and cron notes
+- [docs/FACEBOOK_SETUP.md](./docs/FACEBOOK_SETUP.md): Facebook OAuth, baseline scopes, and Page publishing permission notes
 
 Phase docs are intentionally kept in the repo so future developers and coding
 agents can understand why the system is shaped this way.

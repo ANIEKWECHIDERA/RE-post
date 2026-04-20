@@ -37,6 +37,7 @@ Current completed phases:
 - Marketing Phase 1: Public root landing page with conversion-focused creator messaging, social motion, product preview, placeholder trust marks, and two-row testimonial carousel. See `docs/REPOST_V2_MARKETING_PHASE1.md`.
 - Deployment prep: Public legal pages for provider review and Netlify deployment configuration. See `docs/NETLIFY_DEPLOYMENT.md`.
 - Instagram setup alignment: Instagram business-login scopes, webhook verification endpoint, and setup notes. See `docs/INSTAGRAM_SETUP.md`.
+- Facebook setup alignment: baseline OAuth scopes and Page publishing permission notes. See `docs/FACEBOOK_SETUP.md`.
 
 ## Product Direction
 
@@ -316,6 +317,7 @@ public/images/
 - `docs/REPOST_V2_MARKETING_PHASE1.md`: Marketing landing page implementation record.
 - `docs/NETLIFY_DEPLOYMENT.md`: Netlify deployment, environment, callback, Supabase Auth URL, and cron notes.
 - `docs/INSTAGRAM_SETUP.md`: Instagram app, OAuth callback, webhook callback, permissions, and tester setup notes.
+- `docs/FACEBOOK_SETUP.md`: Facebook OAuth, baseline scopes, and Page publishing permission notes.
 - `README.md`: Public repository overview, setup summary, architecture notes, and contribution guidance.
 - `netlify.toml`: Netlify build settings, Node version, Next.js publish directory, skew protection, and baseline security headers.
 
@@ -341,7 +343,7 @@ public/images/
 - Scheduled Posts, Analytics, and Drafts now have real routes, Supabase-backed read paths, draft lifecycle mutations, and scheduled-post lifecycle mutations; server-side pagination/filter params can still be expanded later.
 - Social connection architecture now includes provider redirect/callback token exchange, encrypted token persistence, token lifecycle audit metadata, and server-only active token retrieval. Provider page/account selection, provider app review, and real-account refresh validation are still pending.
 - Publishing engine job processing is implemented and now consumes decrypted provider tokens and prepared media through a server-only boundary. Live provider calls are available only with `PUBLISH_PROVIDER_MODE=live`.
-- LinkedIn text/image adapter code is implemented. Facebook and Instagram adapter code is implemented but current OAuth records still need Page/professional-account selection before they can publish.
+- LinkedIn text/image adapter code is implemented. Facebook and Instagram adapter code is implemented but current OAuth records still need Page/professional-account selection before they can publish. Facebook Page publishing also needs `pages_manage_posts` access after Meta setup/app review.
 - `POST /api/publish/run` exists and requires `PUBLISH_WORKER_SECRET`; the JWT-protected `publish-worker` Supabase Edge Function is deployed and forwards cron calls to it.
 - The recurring Supabase Cron job is not installed yet; install it only after the deployed Next.js app URL, Edge Function secrets, and Vault secrets are configured.
 - Scheduling is implemented in source with timezone-aware conversion and cancellation.
@@ -419,3 +421,5 @@ Recommended next work:
 - Replaced `instagram_manage_comments` with `instagram_business_manage_comments` after production Playwright tracing showed the older scope triggers Meta's `Invalid platform app` error in Instagram Business Login.
 - Hardened provider OAuth callbacks so successful token persistence is anchored to the short-lived OAuth state row instead of requiring the RE-post browser session cookie to still be readable after Meta redirects back.
 - Improved Connections UX with provider-specific connect buttons and clearer external-login guidance.
+- Moved Facebook initial OAuth to baseline scopes (`public_profile`, `pages_show_list`, `pages_read_engagement`) because Meta rejected `pages_manage_posts` in the active app login flow; Page publishing remains gated until that permission is available.
+- Fixed revoked/expired/error social connections so they show a fresh reconnect form instead of trapping the provider card in a terminal revoked state.

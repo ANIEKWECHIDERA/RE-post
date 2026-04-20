@@ -47,7 +47,12 @@ const providerConfigs: Record<Platform, Omit<ProviderConfig, "status">> = {
     name: "Instagram",
     clientIdEnv: "INSTAGRAM_CLIENT_ID",
     clientSecretEnv: "INSTAGRAM_CLIENT_SECRET",
-    scopes: ["instagram_basic", "instagram_content_publish"],
+    scopes: [
+      "instagram_business_basic",
+      "instagram_business_content_publish",
+      "instagram_manage_comments",
+      "instagram_business_manage_messages",
+    ],
     scopeSeparator: ",",
     authBaseUrl: "https://api.instagram.com/oauth/authorize",
     tokenUrl: "https://api.instagram.com/oauth/access_token",

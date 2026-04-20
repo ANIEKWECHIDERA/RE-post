@@ -36,6 +36,7 @@ Current completed phases:
 - Navigation expansion Phase 9: Safe app-level E2E expansion while provider credentials are pending. See `docs/REPOST_V2_NAV_PHASE9.md`.
 - Marketing Phase 1: Public root landing page with conversion-focused creator messaging, social motion, product preview, placeholder trust marks, and two-row testimonial carousel. See `docs/REPOST_V2_MARKETING_PHASE1.md`.
 - Deployment prep: Public legal pages for provider review and Netlify deployment configuration. See `docs/NETLIFY_DEPLOYMENT.md`.
+- Instagram setup alignment: Instagram business-login scopes, webhook verification endpoint, and setup notes. See `docs/INSTAGRAM_SETUP.md`.
 
 ## Product Direction
 
@@ -140,6 +141,7 @@ FACEBOOK_CLIENT_ID=
 FACEBOOK_CLIENT_SECRET=
 INSTAGRAM_CLIENT_ID=
 INSTAGRAM_CLIENT_SECRET=
+INSTAGRAM_WEBHOOK_VERIFY_TOKEN=
 PUBLISH_WORKER_SECRET=
 PUBLISH_WORKER_URL=
 PUBLISH_PROVIDER_MODE=disabled
@@ -255,6 +257,7 @@ public/images/
 - `hooks/use-drafts.ts`: TanStack Query drafts hook.
 - `hooks/use-page-realtime.ts`: Focused page-level realtime invalidation hook.
 - `app/api/publish/run/route.ts`: Secret-protected publishing worker endpoint.
+- `app/api/webhooks/instagram/route.ts`: Instagram webhook verification and signed delivery endpoint.
 - `features/composer/components/post-composer.tsx`: Composer UI for text, platforms, media, timing, and warnings.
 - `features/marketing/content.ts`: Typed marketing copy, trust placeholders, testimonials, and landing-page content data.
 - `features/marketing/components/landing-page.tsx`: Public RE-post marketing landing page.
@@ -312,6 +315,7 @@ public/images/
 - `docs/REPOST_V2_NAV_PHASE9.md`: Navigation expansion Phase 9 safe app-level E2E implementation record.
 - `docs/REPOST_V2_MARKETING_PHASE1.md`: Marketing landing page implementation record.
 - `docs/NETLIFY_DEPLOYMENT.md`: Netlify deployment, environment, callback, Supabase Auth URL, and cron notes.
+- `docs/INSTAGRAM_SETUP.md`: Instagram app, OAuth callback, webhook callback, permissions, and tester setup notes.
 - `README.md`: Public repository overview, setup summary, architecture notes, and contribution guidance.
 - `netlify.toml`: Netlify build settings, Node version, Next.js publish directory, skew protection, and baseline security headers.
 
@@ -410,3 +414,4 @@ Recommended next work:
 
 - Added public `/privacy`, `/terms`, and `/data-deletion` pages for provider dashboard review and Meta app details.
 - Added `netlify.toml`, Node 22 engine guidance, deployment docs, README deployment notes, and setup docs for Netlify.
+- Updated Instagram setup for the newer Instagram API flow by adding business-login scopes, a dedicated `/api/webhooks/instagram` endpoint, webhook verify-token env support, and setup documentation.

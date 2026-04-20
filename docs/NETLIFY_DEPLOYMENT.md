@@ -39,6 +39,7 @@ FACEBOOK_CLIENT_ID=
 FACEBOOK_CLIENT_SECRET=
 INSTAGRAM_CLIENT_ID=
 INSTAGRAM_CLIENT_SECRET=
+INSTAGRAM_WEBHOOK_VERIFY_TOKEN=
 PUBLISH_WORKER_SECRET=
 PUBLISH_WORKER_URL=
 PUBLISH_PROVIDER_MODE=disabled
@@ -78,6 +79,22 @@ https://your-netlify-domain.netlify.app/api/connections/linkedin/callback
 https://your-netlify-domain.netlify.app/api/connections/facebook/callback
 https://your-netlify-domain.netlify.app/api/connections/instagram/callback
 ```
+
+Instagram webhook callback URL:
+
+```text
+https://your-netlify-domain.netlify.app/api/webhooks/instagram
+```
+
+Use the exact `INSTAGRAM_WEBHOOK_VERIFY_TOKEN` value from Netlify as the Meta
+webhook verify token. Generate it locally with:
+
+```bash
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+```
+
+Do not use `/api/connections/instagram/callback` as the Instagram webhook URL.
+That route is only for OAuth login redirects.
 
 For Meta app details, use these public pages:
 

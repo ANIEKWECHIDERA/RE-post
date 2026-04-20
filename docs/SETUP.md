@@ -31,6 +31,7 @@ FACEBOOK_CLIENT_ID=
 FACEBOOK_CLIENT_SECRET=
 INSTAGRAM_CLIENT_ID=
 INSTAGRAM_CLIENT_SECRET=
+INSTAGRAM_WEBHOOK_VERIFY_TOKEN=
 PUBLISH_WORKER_SECRET=
 PUBLISH_WORKER_URL=
 PUBLISH_PROVIDER_MODE=disabled
@@ -43,6 +44,7 @@ Notes:
 - `PUBLISH_PROVIDER_MODE=mock` can test the internal publishing flow without real provider calls.
 - `PUBLISH_PROVIDER_MODE=live` enables real provider adapter calls from the server-side worker.
 - Live Facebook and Instagram publishing still require Page/professional-account selection and provider app review before real-account use.
+- `INSTAGRAM_WEBHOOK_VERIFY_TOKEN` is an app-defined random value used only for Meta webhook setup verification. It is not an Instagram access token.
 - The Supabase `publish-worker` Edge Function also needs `PUBLISH_WORKER_URL` and `PUBLISH_WORKER_SECRET` configured as Edge Function secrets before cron can execute real jobs.
 
 ## Run

@@ -285,23 +285,27 @@ async function fetchProviderProfile(
   });
   const payload = (await response.json()) as {
     id?: string;
+    user_id?: string;
     username?: string;
     account_type?: string;
   };
 
-  if (!response.ok || !payload.id) {
+  const providerAccountId = payload.user_id ?? payload.id;
+
+  if (!response.ok || !providerAccountId) {
     throw new Error('Instagram profile fetch failed.');
   }
 
   return {
-    providerAccountId: payload.id,
+    providerAccountId,
     displayName: payload.username ?? null,
     handle: payload.username ? `@${payload.username}` : null,
     avatarUrl: null,
     metadata: {
-      profileKind: 'instagram_basic',
+      profileKind: 'instagram_professional',
       accountType: payload.account_type ?? null,
-      graphPublishingUpgradePending: true,
+      instagramApi: 'instagram_login',
+      webhookSubscriptionPending: true,
     },
   };
 }

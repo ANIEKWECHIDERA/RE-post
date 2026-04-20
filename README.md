@@ -110,6 +110,7 @@ FACEBOOK_CLIENT_ID=
 FACEBOOK_CLIENT_SECRET=
 INSTAGRAM_CLIENT_ID=
 INSTAGRAM_CLIENT_SECRET=
+INSTAGRAM_WEBHOOK_VERIFY_TOKEN=
 PUBLISH_WORKER_SECRET=
 PUBLISH_WORKER_URL=
 PUBLISH_PROVIDER_MODE=disabled
@@ -222,6 +223,12 @@ OAuth callback routes:
 /api/connections/linkedin/callback
 /api/connections/facebook/callback
 /api/connections/instagram/callback
+```
+
+Instagram webhook route:
+
+```text
+/api/webhooks/instagram
 ```
 
 Current limitations:

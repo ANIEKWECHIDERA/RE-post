@@ -15,6 +15,7 @@ has been retired from the active app path.
 
 Implemented foundations include:
 
+- public marketing landing page at `/`
 - Supabase Auth with protected app routes
 - creator dashboard with realtime activity patterns
 - post composer with platform selection, media upload, validation, and warnings
@@ -52,7 +53,7 @@ should run only in a controlled staging setup.
 ```text
 app/          Next.js routes, layouts, and API route handlers
 components/   shared UI and layout components
-features/     product feature UI
+features/     product feature UI, including the public marketing landing page
 hooks/        React Query and realtime hooks
 lib/          env, fetch, error, and Supabase client helpers
 schemas/      Zod schemas
@@ -220,6 +221,7 @@ Important docs:
 - [docs/SETUP.md](./docs/SETUP.md): setup and deployment notes
 - [docs/REPOST_V2_PHASE0.md](./docs/REPOST_V2_PHASE0.md): discovery and target architecture
 - [docs/REPOST_V2_NAV_PHASE9.md](./docs/REPOST_V2_NAV_PHASE9.md): latest safe E2E expansion
+- [docs/REPOST_V2_MARKETING_PHASE1.md](./docs/REPOST_V2_MARKETING_PHASE1.md): public landing page implementation notes
 
 Phase docs are intentionally kept in the repo so future developers and coding
 agents can understand why the system is shaped this way.

@@ -40,3 +40,74 @@
     @apply focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2;
   }
 }
+
+@layer utilities {
+  @keyframes repost-marquee-left {
+    from {
+      transform: translate3d(0, 0, 0);
+    }
+    to {
+      transform: translate3d(-50%, 0, 0);
+    }
+  }
+
+  @keyframes repost-marquee-right {
+    from {
+      transform: translate3d(-50%, 0, 0);
+    }
+    to {
+      transform: translate3d(0, 0, 0);
+    }
+  }
+
+  @keyframes repost-pulse {
+    0%,
+    100% {
+      opacity: 0.55;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 1;
+      transform: scale(1.35);
+    }
+  }
+
+  @keyframes repost-tap {
+    0% {
+      opacity: 0.85;
+      transform: scale(0.35);
+    }
+    70%,
+    100% {
+      opacity: 0;
+      transform: scale(1.35);
+    }
+  }
+
+  .animate-repost-marquee-left {
+    animation: repost-marquee-left 38s linear infinite;
+  }
+
+  .animate-repost-marquee-right {
+    animation: repost-marquee-right 42s linear infinite;
+  }
+
+  .animate-repost-pulse {
+    animation: repost-pulse 1.8s ease-in-out infinite;
+  }
+
+  .animate-repost-tap {
+    animation: repost-tap 1.9s ease-out infinite;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    scroll-behavior: auto !important;
+    transition-duration: 0.01ms !important;
+  }
+}

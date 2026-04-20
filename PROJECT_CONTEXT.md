@@ -34,6 +34,7 @@ Current completed phases:
 - Navigation expansion Phase 7: Real provider adapter modules for LinkedIn, Facebook, and Instagram behind live mode. See `docs/REPOST_V2_NAV_PHASE7.md`.
 - Navigation expansion Phase 8: Supabase Cron deployment helper, JWT-protected Edge Function deployment, and private cron install runbook. See `docs/REPOST_V2_NAV_PHASE8.md`.
 - Navigation expansion Phase 9: Safe app-level E2E expansion while provider credentials are pending. See `docs/REPOST_V2_NAV_PHASE9.md`.
+- Marketing Phase 1: Public root landing page with conversion-focused creator messaging, social motion, product preview, placeholder trust marks, and two-row testimonial carousel. See `docs/REPOST_V2_MARKETING_PHASE1.md`.
 
 ## Product Direction
 
@@ -188,7 +189,7 @@ public/images/
 
 ## Key Files
 
-- `app/page.tsx`: Root entry route that redirects to `/dashboard`.
+- `app/page.tsx`: Public marketing landing page route.
 - `app/(app)/layout.tsx`: Protected app route boundary.
 - `app/(app)/dashboard/page.tsx`: Authenticated dashboard page.
 - `app/(app)/compose/page.tsx`: Authenticated post composer page.
@@ -248,6 +249,10 @@ public/images/
 - `hooks/use-page-realtime.ts`: Focused page-level realtime invalidation hook.
 - `app/api/publish/run/route.ts`: Secret-protected publishing worker endpoint.
 - `features/composer/components/post-composer.tsx`: Composer UI for text, platforms, media, timing, and warnings.
+- `features/marketing/content.ts`: Typed marketing copy, trust placeholders, testimonials, and landing-page content data.
+- `features/marketing/components/landing-page.tsx`: Public RE-post marketing landing page.
+- `features/marketing/components/social-motion-layer.tsx`: Lightweight scroll-aware social activity motion layer with reduced-motion support.
+- `features/marketing/components/testimonial-marquee.tsx`: CSS-only two-row testimonial marquee component.
 - `features/composer/media-validation.ts`: Browser-side media metadata inspection and platform warning logic.
 - `server/composer/actions.ts`: Server action that creates posts, uploads media, creates platform targets, queues publish jobs, and logs activity.
 - `server/connections/providers.ts`: Provider-specific connection config and readiness.
@@ -296,6 +301,7 @@ public/images/
 - `docs/REPOST_V2_NAV_PHASE7.md`: Navigation expansion Phase 7 real provider adapter implementation record.
 - `docs/REPOST_V2_NAV_PHASE8.md`: Navigation expansion Phase 8 cron deployment implementation record.
 - `docs/REPOST_V2_NAV_PHASE9.md`: Navigation expansion Phase 9 safe app-level E2E implementation record.
+- `docs/REPOST_V2_MARKETING_PHASE1.md`: Marketing landing page implementation record.
 - `README.md`: Public repository overview, setup summary, architecture notes, and contribution guidance.
 
 ## Security Principles
@@ -386,3 +392,4 @@ Recommended next work:
 - Completed navigation expansion Phase 8 by applying the cron deployment migration through Supabase MCP, enabling `pg_net` and `pg_cron`, adding `public.invoke_publish_worker_cron(...)`, deploying the JWT-protected `publish-worker` Edge Function, and adding the private Vault/cron SQL runbook.
 - Completed navigation expansion Phase 9 safe E2E expansion by adding protected API guard checks, invalid media rejection, draft persistence/reopen coverage, cross-user draft isolation, scheduled post lifecycle polling, and a no-provider worker run that records `connection_missing`.
 - Added the root `README.md` so visitors and contributors can understand the product, stack, setup path, Supabase architecture, provider integration status, and contribution rules quickly.
+- Replaced the root dashboard redirect with a public, conversion-focused marketing landing page for RE-post, including creator-native messaging, product preview, social motion, placeholder trust marks, and a two-row testimonial carousel.

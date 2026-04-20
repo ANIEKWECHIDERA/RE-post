@@ -1,8 +1,10 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
+import { getServerEnv } from "@/lib/env/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
 import { signInSchema, signUpSchema } from "@/schemas/auth";
 
@@ -76,6 +78,7 @@ export async function signUpAction(_: AuthActionState, formData: FormData): Prom
     email: parsed.data.email,
     password: parsed.data.password,
     options: {
+      emailRedirectTo: await getAuthCallbackUrl(),
       data: {
         display_name: parsed.data.displayName,
         timezone: parsed.data.timezone,
@@ -99,6 +102,29 @@ export async function signUpAction(_: AuthActionState, formData: FormData): Prom
 
   revalidatePath("/", "layout");
   redirect("/dashboard");
+}
+
+async function getAuthCallbackUrl() {
+  const env = getServerEnv();
+  const configuredOrigin = env?.NEXT_PUBLIC_APP_URL;
+  const origin = configuredOrigin ?? (await getRequestOrigin());
+
+  // Supabase email confirmation returns to this route with a short-lived code.
+  // The route exchanges that code for app cookies, so verified users land
+  // signed in instead of seeing another login screen.
+  return new URL("/auth/callback?next=/dashboard", origin).toString();
+}
+
+async function getRequestOrigin() {
+  const headerStore = await headers();
+  const host = headerStore.get("x-forwarded-host") ?? headerStore.get("host");
+  const protocol = headerStore.get("x-forwarded-proto") ?? "http";
+
+  if (!host) {
+    return "http://localhost:3000";
+  }
+
+  return `${protocol}://${host}`;
 }
 
 export async function signOutAction() {

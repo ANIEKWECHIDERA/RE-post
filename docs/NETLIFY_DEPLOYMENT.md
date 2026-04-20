@@ -31,6 +31,7 @@ Add these in Netlify under Site configuration -> Environment variables.
 ```text
 NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
+NEXT_PUBLIC_APP_URL=https://re-post.netlify.app
 SUPABASE_SERVICE_ROLE_KEY=
 TOKEN_ENCRYPTION_KEY=
 LINKEDIN_CLIENT_ID=
@@ -115,9 +116,12 @@ In Supabase Auth settings, add the production site URL and redirect URLs:
 Site URL: https://your-netlify-domain.netlify.app
 Additional Redirect URLs:
 https://your-netlify-domain.netlify.app/**
+https://your-netlify-domain.netlify.app/auth/callback
 ```
 
 If a custom domain is added later, add that domain too.
+Without this, Supabase confirmation emails can fall back to a localhost
+`redirect_to` value.
 
 ## Scheduled Publishing Cron
 

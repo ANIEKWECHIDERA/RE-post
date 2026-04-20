@@ -22,6 +22,7 @@ Create `.env` from `.env.example`.
 ```text
 NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
+NEXT_PUBLIC_APP_URL=
 SUPABASE_SERVICE_ROLE_KEY=
 TOKEN_ENCRYPTION_KEY=
 SUPABASE_ACCESS_TOKEN=
@@ -40,6 +41,9 @@ PUBLISH_PROVIDER_MODE=disabled
 Notes:
 
 - `SUPABASE_SERVICE_ROLE_KEY`, `TOKEN_ENCRYPTION_KEY`, and `PUBLISH_WORKER_SECRET` must stay server-only.
+- `NEXT_PUBLIC_APP_URL` should be the deployed app origin, for example
+  `https://re-post.netlify.app`, so Supabase verification emails return to
+  `/auth/callback` on the right app.
 - `PUBLISH_PROVIDER_MODE=disabled` is the safe default.
 - `PUBLISH_PROVIDER_MODE=mock` can test the internal publishing flow without real provider calls.
 - `PUBLISH_PROVIDER_MODE=live` enables real provider adapter calls from the server-side worker.

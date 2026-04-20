@@ -133,6 +133,7 @@ Current variables:
 ```text
 NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
+NEXT_PUBLIC_APP_URL=
 SUPABASE_SERVICE_ROLE_KEY=
 TOKEN_ENCRYPTION_KEY=
 SUPABASE_ACCESS_TOKEN=
@@ -197,6 +198,7 @@ public/images/
 ## Key Files
 
 - `app/page.tsx`: Public marketing landing page route.
+- `app/auth/callback/route.ts`: Supabase email verification callback that exchanges auth codes into app sessions.
 - `app/privacy/page.tsx`: Public privacy policy route for provider review.
 - `app/terms/page.tsx`: Public terms of service route for provider review.
 - `app/data-deletion/page.tsx`: Public user data deletion instructions route for provider review.
@@ -423,3 +425,5 @@ Recommended next work:
 - Improved Connections UX with provider-specific connect buttons and clearer external-login guidance.
 - Moved Facebook initial OAuth to baseline scopes (`public_profile`, `pages_show_list`, `pages_read_engagement`) because Meta rejected `pages_manage_posts` in the active app login flow; Page publishing remains gated until that permission is available.
 - Fixed revoked/expired/error social connections so they show a fresh reconnect form instead of trapping the provider card in a terminal revoked state.
+- Added `NEXT_PUBLIC_APP_URL`, Supabase email verification redirect handling through `/auth/callback`, and immediate post-verification session exchange into `/dashboard`.
+- Added per-platform publish activity events so successful, failed, and retry-scheduled target outcomes appear as realtime dashboard notifications.

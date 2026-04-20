@@ -68,9 +68,9 @@ export function ConnectionsDashboard({ data }: { data: ConnectionsPageData }) {
                     connectionStatus={connection?.status}
                   />
                 </CardTitle>
-                <CardDescription>
+                {/* <CardDescription>
                   Scopes: {provider.scopes.join(', ')}
-                </CardDescription>
+                </CardDescription> */}
               </CardHeader>
               <CardContent className="grid gap-4">
                 {connection && canUseConnection ? (
@@ -92,7 +92,8 @@ export function ConnectionsDashboard({ data }: { data: ConnectionsPageData }) {
                     {connection ? (
                       <div className="rounded-lg border border-dashed p-3 text-sm">
                         <p className="font-medium">
-                          Previous {provider.name} connection is {connection.status}.
+                          Previous {provider.name} connection is{' '}
+                          {connection.status}.
                         </p>
                         <p className="mt-1 text-xs leading-5 text-muted-foreground">
                           Tokens were cleared, so start a fresh provider login

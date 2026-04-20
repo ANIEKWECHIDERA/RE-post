@@ -13,6 +13,7 @@ import { publishToProvider } from '@/server/publishing/provider-adapters';
 import { getActiveProviderToken } from '@/server/connections/token-store';
 import type {
   Database,
+  Json,
   PostTargetStatus,
   PublishJobStatus,
 } from '@/types/database';
@@ -323,6 +324,24 @@ async function processTarget(
       published_at: new Date().toISOString(),
     });
 
+    await insertTargetActivity(supabase, {
+      userId: post.user_id,
+      postId: post.id,
+      targetId: target.id,
+      platform: target.platform,
+      type: 'publish_succeeded',
+      title: `${getPlatformLabel(target.platform)} published`,
+      message: providerResult.providerPermalink
+        ? `${getPlatformLabel(target.platform)} accepted the post and returned a live link.`
+        : `${getPlatformLabel(target.platform)} accepted the post.`,
+      metadata: {
+        platform: target.platform,
+        targetId: target.id,
+        providerPublishId: providerResult.providerPublishId,
+        providerPermalink: providerResult.providerPermalink,
+      },
+    });
+
     return { status: 'succeeded' } satisfies TargetResult;
   } catch (error) {
     const normalized = normalizeProviderError(error);
@@ -348,6 +367,26 @@ async function processTarget(
       status: nextStatus,
       last_error_code: normalized.code,
       last_error_message: normalized.message,
+    });
+
+    await insertTargetActivity(supabase, {
+      userId: post.user_id,
+      postId: post.id,
+      targetId: target.id,
+      platform: target.platform,
+      type: retryAfter ? 'retry_scheduled' : 'publish_failed',
+      title: retryAfter
+        ? `${getPlatformLabel(target.platform)} retry scheduled`
+        : `${getPlatformLabel(target.platform)} publish failed`,
+      message: retryAfter
+        ? `${getPlatformLabel(target.platform)} returned a retryable issue. RE-post will try again.`
+        : normalized.message,
+      metadata: {
+        platform: target.platform,
+        targetId: target.id,
+        errorCode: normalized.code,
+        retryAfter,
+      },
     });
 
     return {
@@ -415,6 +454,40 @@ function updateTarget(
     .from('post_platform_targets')
     .update(update)
     .eq('id', targetId);
+}
+
+function insertTargetActivity(
+  supabase: AdminClient,
+  event: {
+    userId: string;
+    postId: string;
+    targetId: string;
+    platform: PostTarget['platform'];
+    type: 'publish_succeeded' | 'publish_failed' | 'retry_scheduled';
+    title: string;
+    message: string;
+    metadata: Json;
+  },
+) {
+  return supabase.from('activity_events').insert({
+    user_id: event.userId,
+    post_id: event.postId,
+    type: event.type,
+    title: event.title,
+    message: event.message,
+    metadata: event.metadata,
+  });
+}
+
+function getPlatformLabel(platform: PostTarget['platform']) {
+  switch (platform) {
+    case 'linkedin':
+      return 'LinkedIn';
+    case 'facebook':
+      return 'Facebook';
+    case 'instagram':
+      return 'Instagram';
+  }
 }
 
 function getRetryAfter(attemptsCount: number) {

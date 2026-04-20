@@ -101,6 +101,7 @@ http://localhost:3000
 ```text
 NEXT_PUBLIC_SUPABASE_URL=
 NEXT_PUBLIC_SUPABASE_ANON_KEY=
+NEXT_PUBLIC_APP_URL=
 SUPABASE_SERVICE_ROLE_KEY=
 TOKEN_ENCRYPTION_KEY=
 SUPABASE_ACCESS_TOKEN=
@@ -120,6 +121,9 @@ Important notes:
 
 - `SUPABASE_SERVICE_ROLE_KEY`, `TOKEN_ENCRYPTION_KEY`, and
   `PUBLISH_WORKER_SECRET` are server-only.
+- `NEXT_PUBLIC_APP_URL` should be the deployed app origin, for example
+  `https://re-post.netlify.app`; it is used for Supabase email verification
+  redirects.
 - `PUBLISH_PROVIDER_MODE=disabled` is the safe default.
 - Use `PUBLISH_PROVIDER_MODE=mock` for internal worker flow testing.
 - Use `PUBLISH_PROVIDER_MODE=live` only with approved provider apps and
@@ -220,6 +224,7 @@ INSTAGRAM_CLIENT_SECRET=
 OAuth callback routes:
 
 ```text
+/auth/callback
 /api/connections/linkedin/callback
 /api/connections/facebook/callback
 /api/connections/instagram/callback

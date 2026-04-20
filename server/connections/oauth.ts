@@ -4,7 +4,7 @@ import { createHash } from 'node:crypto';
 
 import { NextResponse } from 'next/server';
 
-import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { createSupabaseAdminClient } from '@/lib/supabase/admin';
 import { platformSchema, type Platform } from '@/schemas/platform';
 import { getCurrentUser } from '@/server/auth/session';
 import { getProviderSecret } from '@/server/connections/providers';
@@ -34,32 +34,37 @@ export async function handleProviderOAuthCallback({
   request: Request;
 }) {
   const parsedPlatform = platformSchema.safeParse(platform);
-  const user = await getCurrentUser();
-  const supabase = await createSupabaseServerClient();
+  const currentUser = await getCurrentUser();
+  const supabase = createSupabaseAdminClient();
   const providerSecret = getProviderSecret(platform);
   const url = new URL(request.url);
   const code = url.searchParams.get('code');
   const rawState = url.searchParams.get('state');
   const providerError = url.searchParams.get('error');
 
-  if (!parsedPlatform.success || !user || !supabase || !providerSecret) {
+  if (!parsedPlatform.success || !supabase || !providerSecret) {
     return redirectToConnections(request, platform, 'error');
   }
 
   if (providerError || !code || !rawState) {
-    await logConnectionFailure({
-      userId: user.id,
-      platform,
-      message: providerError ? 'Provider denied the connection.' : 'OAuth callback was incomplete.',
-    });
+    if (currentUser) {
+      await logConnectionFailure({
+        userId: currentUser.id,
+        platform,
+        message: providerError ? 'Provider denied the connection.' : 'OAuth callback was incomplete.',
+      });
+    }
     return redirectToConnections(request, platform, 'error');
   }
 
+  // OAuth callbacks can return after the browser has visited a third-party
+  // domain and, in some environments, without a readable app session cookie.
+  // The high-entropy state row is the trust anchor here: it was created only
+  // after RE-post auth, is hashed at rest, expires quickly, and is consumed once.
   const stateHash = createHash('sha256').update(rawState).digest('hex');
   const { data: stateRow } = await supabase
     .from('connection_oauth_states')
-    .select('id,expires_at,consumed_at')
-    .eq('user_id', user.id)
+    .select('id,user_id,expires_at,consumed_at')
     .eq('platform', platform)
     .eq('state_hash', stateHash)
     .maybeSingle();
@@ -69,19 +74,23 @@ export async function handleProviderOAuthCallback({
     stateRow.consumed_at ||
     Date.parse(stateRow.expires_at) <= Date.now()
   ) {
-    await logConnectionFailure({
-      userId: user.id,
-      platform,
-      message: 'OAuth state was invalid or expired.',
-    });
+    if (currentUser) {
+      await logConnectionFailure({
+        userId: currentUser.id,
+        platform,
+        message: 'OAuth state was invalid or expired.',
+      });
+    }
     return redirectToConnections(request, platform, 'error');
   }
+
+  const userId = stateRow.user_id;
 
   await supabase
     .from('connection_oauth_states')
     .update({ consumed_at: new Date().toISOString() })
     .eq('id', stateRow.id)
-    .eq('user_id', user.id);
+    .eq('user_id', userId);
 
   try {
     const redirectUri = new URL(providerSecret.provider.callbackPath, request.url).toString();
@@ -102,7 +111,7 @@ export async function handleProviderOAuthCallback({
     // refresh code should decrypt these fields.
     await supabase.from('social_connections').upsert(
       {
-        user_id: user.id,
+        user_id: userId,
         platform,
         provider_account_id: profile.providerAccountId,
         display_name: profile.displayName,
@@ -131,7 +140,7 @@ export async function handleProviderOAuthCallback({
     );
 
     await supabase.from('activity_events').insert({
-      user_id: user.id,
+      user_id: userId,
       type: 'social_connection_created',
       title: `${providerSecret.provider.name} connected`,
       message: 'Provider tokens were stored through the encrypted server boundary.',
@@ -143,7 +152,7 @@ export async function handleProviderOAuthCallback({
     return redirectToConnections(request, platform, 'connected');
   } catch {
     await logConnectionFailure({
-      userId: user.id,
+      userId,
       platform,
       message: 'Provider token exchange failed.',
     });
@@ -323,7 +332,7 @@ async function logConnectionFailure({
   platform: Platform;
   message: string;
 }) {
-  const supabase = await createSupabaseServerClient();
+  const supabase = createSupabaseAdminClient();
 
   if (!supabase) {
     return;

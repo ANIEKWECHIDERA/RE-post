@@ -38,8 +38,10 @@ export function ConnectionsDashboard({ data }: { data: ConnectionsPageData }) {
             <AlertTitle>OAuth callbacks are live</AlertTitle>
             <AlertDescription>
               Secure state verification, callback token exchange, and encrypted
-              token persistence are wired. Provider page selection, app review,
-              and real publishing adapters still come later.
+              token persistence are wired. You may be asked to log in with the
+              provider before consent; if your RE-post session expires during
+              that external flow, sign in again and return here to confirm the
+              connection status.
             </AlertDescription>
           </Alert>
         </CardContent>
@@ -85,6 +87,7 @@ export function ConnectionsDashboard({ data }: { data: ConnectionsPageData }) {
                   <PrepareConnectionForm
                     disabled={!ready}
                     platform={provider.platform as Platform}
+                    providerName={provider.name}
                   />
                 )}
 

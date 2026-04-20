@@ -18,9 +18,11 @@ const initialState: ConnectionActionState = {
 export function PrepareConnectionForm({
   platform,
   disabled,
+  providerName,
 }: {
   platform: Platform;
   disabled: boolean;
+  providerName: string;
 }) {
   const [state, action, pending] = useActionState(prepareConnectionAction, initialState);
 
@@ -28,8 +30,11 @@ export function PrepareConnectionForm({
     <form action={action} className="grid gap-2">
       <input name="platform" type="hidden" value={platform} />
       <Button className="rounded-md" disabled={disabled || pending} type="submit">
-        {pending ? "Starting..." : "Connect"}
+        {pending ? `Opening ${providerName}...` : `Connect ${providerName}`}
       </Button>
+      <p className="text-xs leading-5 text-muted-foreground">
+        Opens {providerName} in this tab, then returns to RE-post after approval.
+      </p>
       {state.message ? (
         <p className={state.ok ? "text-xs text-primary" : "text-xs text-destructive"}>{state.message}</p>
       ) : null}

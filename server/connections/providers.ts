@@ -10,6 +10,7 @@ type ProviderConfig = {
   clientSecretEnv: string;
   scopes: string[];
   scopeSeparator: ' ' | ',';
+  authParams?: Record<string, string>;
   authBaseUrl: string;
   tokenUrl: string;
   profileUrl: string;
@@ -54,7 +55,11 @@ const providerConfigs: Record<Platform, Omit<ProviderConfig, "status">> = {
       "instagram_business_manage_messages",
     ],
     scopeSeparator: ",",
-    authBaseUrl: "https://api.instagram.com/oauth/authorize",
+    authParams: {
+      enable_fb_login: "0",
+      force_authentication: "1",
+    },
+    authBaseUrl: "https://www.instagram.com/oauth/authorize",
     tokenUrl: "https://api.instagram.com/oauth/access_token",
     profileUrl: "https://graph.instagram.com/me",
     callbackPath: "/api/connections/instagram/callback",

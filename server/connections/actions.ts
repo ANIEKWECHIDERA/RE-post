@@ -84,6 +84,9 @@ export async function prepareConnectionAction(
   authUrl.searchParams.set('redirect_uri', redirectUri);
   authUrl.searchParams.set('scope', provider.scopes.join(provider.scopeSeparator));
   authUrl.searchParams.set('state', rawState);
+  for (const [key, value] of Object.entries(provider.authParams ?? {})) {
+    authUrl.searchParams.set(key, value);
+  }
 
   redirect(authUrl.toString());
 }

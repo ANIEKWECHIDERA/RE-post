@@ -415,3 +415,4 @@ Recommended next work:
 - Added public `/privacy`, `/terms`, and `/data-deletion` pages for provider dashboard review and Meta app details.
 - Added `netlify.toml`, Node 22 engine guidance, deployment docs, README deployment notes, and setup docs for Netlify.
 - Updated Instagram setup for the newer Instagram API flow by adding business-login scopes, a dedicated `/api/webhooks/instagram` endpoint, webhook verify-token env support, and setup documentation.
+- Switched Instagram OAuth authorization to the Instagram Business Login endpoint `https://www.instagram.com/oauth/authorize` with `enable_fb_login=0` and `force_authentication=1` to avoid Meta's `Invalid platform app` error from the older authorize host.

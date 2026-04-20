@@ -37,6 +37,24 @@ For local development, use:
 http://localhost:3000/api/connections/instagram/callback
 ```
 
+RE-post generates Instagram Business Login authorization URLs with:
+
+```text
+https://www.instagram.com/oauth/authorize
+```
+
+and includes:
+
+```text
+enable_fb_login=0
+force_authentication=1
+```
+
+If Meta returns `Invalid platform app`, confirm the Instagram app id is used as
+`INSTAGRAM_CLIENT_ID`, the redirect URL above is saved in Instagram Business
+Login settings, and the latest deployment includes this Business Login endpoint
+change.
+
 ## Webhook Callback
 
 The webhook callback is different from the OAuth callback.

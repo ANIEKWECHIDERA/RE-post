@@ -21,11 +21,11 @@ export async function getScheduledPostsPageData(
   const { data: posts, error } = await supabase
     .from('posts')
     .select(
-      'id,body,status,scheduled_at,timezone,published_at,created_at,updated_at',
+      'id,body,status,schedule_mode,scheduled_at,timezone,published_at,created_at,updated_at',
     )
     .eq('user_id', userId)
-    .eq('schedule_mode', 'scheduled')
-    .order('scheduled_at', { ascending: false })
+    .neq('status', 'draft')
+    .order('updated_at', { ascending: false })
     .limit(100);
 
   if (error) {

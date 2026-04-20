@@ -9,6 +9,7 @@ import {
   Sparkles,
 } from 'lucide-react';
 import { useActionState, useEffect, useMemo, useRef, useState } from 'react';
+import { toast } from 'sonner';
 
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
@@ -91,6 +92,7 @@ export function PostComposer({
   );
   const activeState = draftState.message ? draftState : publishState;
   const effectiveDraftId = initialDraft?.id ?? draftState.postId ?? null;
+  const lastToastMessage = useRef<string | null>(null);
 
   useEffect(() => {
     if (!initialDraft || hydratedDraftId.current === initialDraft.id) {
@@ -103,6 +105,21 @@ export function PostComposer({
       selectedPlatforms: initialDraft.platforms,
     });
   }, [hydrateDraft, initialDraft]);
+
+  useEffect(() => {
+    if (!activeState.message || lastToastMessage.current === activeState.message) {
+      return;
+    }
+
+    lastToastMessage.current = activeState.message;
+
+    if (activeState.ok) {
+      toast.success(activeState.message);
+      return;
+    }
+
+    toast.error(activeState.message);
+  }, [activeState.message, activeState.ok]);
 
   async function handleMediaChange(files: FileList | null) {
     if (!files) {

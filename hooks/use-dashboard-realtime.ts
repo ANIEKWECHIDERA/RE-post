@@ -2,6 +2,7 @@
 
 import { useQueryClient } from '@tanstack/react-query';
 import { useEffect, useRef } from 'react';
+import { toast } from 'sonner';
 
 import { createSupabaseBrowserClient } from '@/lib/supabase/client';
 import type { DashboardSummary } from '@/types/dashboard';
@@ -79,6 +80,8 @@ export function useDashboardRealtime({
           };
         },
       );
+
+      notifyPublishActivity(event);
     };
 
     // Keep the home screen live with only high-signal tables. Activity events
@@ -150,4 +153,26 @@ export function useDashboardRealtime({
       void supabase.removeChannel(channel);
     };
   }, [enabled, queryClient, userId]);
+}
+
+function notifyPublishActivity(event: RealtimeActivityEvent) {
+  if (event.type === 'publish_succeeded') {
+    toast.success(event.title, {
+      description: event.message ?? 'The platform accepted the post.',
+    });
+    return;
+  }
+
+  if (event.type === 'publish_failed') {
+    toast.error(event.title, {
+      description: event.message ?? 'The platform rejected the post.',
+    });
+    return;
+  }
+
+  if (event.type === 'retry_scheduled') {
+    toast.warning(event.title, {
+      description: event.message ?? 'RE-post will retry the platform publish.',
+    });
+  }
 }

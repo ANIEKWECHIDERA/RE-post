@@ -2,13 +2,21 @@
 
 import { useQueryClient } from '@tanstack/react-query';
 import { useEffect, useRef } from 'react';
+import { toast } from 'sonner';
 
 import { createSupabaseBrowserClient } from '@/lib/supabase/client';
+import type { ActivityEventType } from '@/types/database';
 
 type PageRealtimeOptions = {
   enabled: boolean;
   userId: string | null;
   queryKeys: string[][];
+};
+
+type RealtimeActivityEvent = {
+  type: ActivityEventType;
+  title: string;
+  message: string | null;
 };
 
 export function usePageRealtime({
@@ -88,7 +96,10 @@ export function usePageRealtime({
           table: 'activity_events',
           filter: `user_id=eq.${userId}`,
         },
-        invalidatePages,
+        payload => {
+          notifyPublishActivity(payload.new as RealtimeActivityEvent);
+          invalidatePages();
+        },
       )
       .on(
         'postgres_changes',
@@ -111,4 +122,26 @@ export function usePageRealtime({
       void supabase.removeChannel(channel);
     };
   }, [enabled, queryClient, queryKeys, userId]);
+}
+
+function notifyPublishActivity(event: RealtimeActivityEvent) {
+  if (event.type === 'publish_succeeded') {
+    toast.success(event.title, {
+      description: event.message ?? 'The platform accepted the post.',
+    });
+    return;
+  }
+
+  if (event.type === 'publish_failed') {
+    toast.error(event.title, {
+      description: event.message ?? 'The platform rejected the post.',
+    });
+    return;
+  }
+
+  if (event.type === 'retry_scheduled') {
+    toast.warning(event.title, {
+      description: event.message ?? 'RE-post will retry the platform publish.',
+    });
+  }
 }

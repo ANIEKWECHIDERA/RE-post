@@ -1,33 +1,38 @@
-"use server";
+'use server';
 
-import { revalidatePath } from "next/cache";
-import { headers } from "next/headers";
-import { redirect } from "next/navigation";
+import { revalidatePath } from 'next/cache';
+import { headers } from 'next/headers';
+import { redirect } from 'next/navigation';
 
-import { getServerEnv } from "@/lib/env/server";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { signInSchema, signUpSchema } from "@/schemas/auth";
+import { getServerEnv } from '@/lib/env/server';
+import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { signInSchema, signUpSchema } from '@/schemas/auth';
 
 export type AuthActionState = {
   ok: boolean;
   message: string;
 };
 
-const defaultError = "We could not complete that auth request. Try again in a moment.";
+const defaultError =
+  'We could not complete that auth request. Try again in a moment.';
 
-export async function signInAction(_: AuthActionState, formData: FormData): Promise<AuthActionState> {
+export async function signInAction(
+  _: AuthActionState,
+  formData: FormData,
+): Promise<AuthActionState> {
   const supabase = await createSupabaseServerClient();
 
   if (!supabase) {
     return {
       ok: false,
-      message: "Supabase is not configured yet. Add the public project URL and anon key first.",
+      message:
+        'Supabase is not configured yet. Add the public project URL and anon key first.',
     };
   }
 
   const parsed = signInSchema.safeParse({
-    email: formData.get("email"),
-    password: formData.get("password"),
+    email: formData.get('email'),
+    password: formData.get('password'),
   });
 
   if (!parsed.success) {
@@ -42,29 +47,33 @@ export async function signInAction(_: AuthActionState, formData: FormData): Prom
   if (error) {
     return {
       ok: false,
-      message: "Those sign-in details did not work.",
+      message: 'Those sign-in details did not work.',
     };
   }
 
-  revalidatePath("/", "layout");
-  redirect("/dashboard");
+  revalidatePath('/', 'layout');
+  redirect('/dashboard');
 }
 
-export async function signUpAction(_: AuthActionState, formData: FormData): Promise<AuthActionState> {
+export async function signUpAction(
+  _: AuthActionState,
+  formData: FormData,
+): Promise<AuthActionState> {
   const supabase = await createSupabaseServerClient();
 
   if (!supabase) {
     return {
       ok: false,
-      message: "Supabase is not configured yet. Add the public project URL and anon key first.",
+      message:
+        'Supabase is not configured yet. Add the public project URL and anon key first.',
     };
   }
 
   const parsed = signUpSchema.safeParse({
-    displayName: formData.get("displayName"),
-    email: formData.get("email"),
-    password: formData.get("password"),
-    timezone: formData.get("timezone") || "UTC",
+    displayName: formData.get('displayName'),
+    email: formData.get('email'),
+    password: formData.get('password'),
+    timezone: formData.get('timezone') || 'UTC',
   });
 
   if (!parsed.success) {
@@ -89,19 +98,19 @@ export async function signUpAction(_: AuthActionState, formData: FormData): Prom
   if (error) {
     return {
       ok: false,
-      message: "We could not create that account.",
+      message: 'We could not create that account.',
     };
   }
 
   if (!data.session) {
     return {
       ok: true,
-      message: "Account created. Check your email if confirmation is enabled.",
+      message: 'Account created. Check your email for confirmation.',
     };
   }
 
-  revalidatePath("/", "layout");
-  redirect("/dashboard");
+  revalidatePath('/', 'layout');
+  redirect('/dashboard');
 }
 
 async function getAuthCallbackUrl() {
@@ -112,16 +121,16 @@ async function getAuthCallbackUrl() {
   // Supabase email confirmation returns to this route with a short-lived code.
   // The route exchanges that code for app cookies, so verified users land
   // signed in instead of seeing another login screen.
-  return new URL("/auth/callback?next=/dashboard", origin).toString();
+  return new URL('/auth/callback?next=/dashboard', origin).toString();
 }
 
 async function getRequestOrigin() {
   const headerStore = await headers();
-  const host = headerStore.get("x-forwarded-host") ?? headerStore.get("host");
-  const protocol = headerStore.get("x-forwarded-proto") ?? "http";
+  const host = headerStore.get('x-forwarded-host') ?? headerStore.get('host');
+  const protocol = headerStore.get('x-forwarded-proto') ?? 'http';
 
   if (!host) {
-    return "http://localhost:3000";
+    return 'http://localhost:3000';
   }
 
   return `${protocol}://${host}`;
@@ -134,6 +143,6 @@ export async function signOutAction() {
     await supabase.auth.signOut();
   }
 
-  revalidatePath("/", "layout");
-  redirect("/sign-in");
+  revalidatePath('/', 'layout');
+  redirect('/sign-in');
 }

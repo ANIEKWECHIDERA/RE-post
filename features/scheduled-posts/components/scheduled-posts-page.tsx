@@ -106,14 +106,14 @@ export function ScheduledPostsPage({
         <CardHeader className="grid gap-4 md:grid-cols-[1fr_auto] md:items-center">
           <div>
             <Badge className="w-fit rounded-md" variant="outline">
-              Scheduled posts
+              Publishing queue
             </Badge>
             <CardTitle className="mt-4 text-3xl font-semibold tracking-normal md:text-5xl">
-              Keep future-you covered.
+              See every post in motion.
             </CardTitle>
             <CardDescription className="mt-3 max-w-2xl text-base">
-              See what is lined up, what is running, and what needs a recovery
-              pass before the streak clock gets loud.
+              Immediate posts, scheduled drops, retries, platform results, and
+              failures all land here so the queue is never invisible.
             </CardDescription>
           </div>
           <div className="rounded-lg border bg-background p-4 text-sm">
@@ -405,13 +405,13 @@ function EmptyScheduledState() {
         <CalendarClock className="h-10 w-10 text-primary" />
         <CardTitle>No scheduled posts match this view</CardTitle>
         <CardDescription>
-          Queue a post from Compose and it will land here with its platforms,
-          worker status, and realtime publishing updates.
+          Queue or schedule a post from Compose and it will land here with its
+          platforms, worker status, and realtime publishing updates.
         </CardDescription>
         <Separator />
         <p className="text-sm text-muted-foreground">
-          Schedule a post from Composer and it will appear here with secure
-          edit, reschedule, cancel, duplicate, and terminal delete actions.
+          Immediate posts appear here too, not just scheduled ones. This page is
+          the operational queue for everything the publishing engine touches.
         </p>
       </CardContent>
     </Card>

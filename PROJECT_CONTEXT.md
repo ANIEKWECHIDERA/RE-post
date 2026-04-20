@@ -35,6 +35,7 @@ Current completed phases:
 - Navigation expansion Phase 8: Supabase Cron deployment helper, JWT-protected Edge Function deployment, and private cron install runbook. See `docs/REPOST_V2_NAV_PHASE8.md`.
 - Navigation expansion Phase 9: Safe app-level E2E expansion while provider credentials are pending. See `docs/REPOST_V2_NAV_PHASE9.md`.
 - Marketing Phase 1: Public root landing page with conversion-focused creator messaging, social motion, product preview, placeholder trust marks, and two-row testimonial carousel. See `docs/REPOST_V2_MARKETING_PHASE1.md`.
+- Deployment prep: Public legal pages for provider review and Netlify deployment configuration. See `docs/NETLIFY_DEPLOYMENT.md`.
 
 ## Product Direction
 
@@ -161,9 +162,12 @@ app/
 |-- (auth)/
 |-- (app)/
 |-- api/
+|-- data-deletion/
 |-- globals.css
 |-- layout.tsx
 |-- page.tsx
+|-- privacy/
+`-- terms/
 components/
 |-- layout/
 |-- providers/
@@ -190,6 +194,9 @@ public/images/
 ## Key Files
 
 - `app/page.tsx`: Public marketing landing page route.
+- `app/privacy/page.tsx`: Public privacy policy route for provider review.
+- `app/terms/page.tsx`: Public terms of service route for provider review.
+- `app/data-deletion/page.tsx`: Public user data deletion instructions route for provider review.
 - `app/(app)/layout.tsx`: Protected app route boundary.
 - `app/(app)/dashboard/page.tsx`: Authenticated dashboard page.
 - `app/(app)/compose/page.tsx`: Authenticated post composer page.
@@ -253,6 +260,8 @@ public/images/
 - `features/marketing/components/landing-page.tsx`: Public RE-post marketing landing page.
 - `features/marketing/components/social-motion-layer.tsx`: Lightweight scroll-aware social activity motion layer with reduced-motion support.
 - `features/marketing/components/testimonial-marquee.tsx`: CSS-only two-row testimonial marquee component.
+- `features/legal/content.ts`: Public legal page copy and support contact content.
+- `features/legal/components/legal-page.tsx`: Shared public legal page renderer.
 - `features/composer/media-validation.ts`: Browser-side media metadata inspection and platform warning logic.
 - `server/composer/actions.ts`: Server action that creates posts, uploads media, creates platform targets, queues publish jobs, and logs activity.
 - `server/connections/providers.ts`: Provider-specific connection config and readiness.
@@ -302,7 +311,9 @@ public/images/
 - `docs/REPOST_V2_NAV_PHASE8.md`: Navigation expansion Phase 8 cron deployment implementation record.
 - `docs/REPOST_V2_NAV_PHASE9.md`: Navigation expansion Phase 9 safe app-level E2E implementation record.
 - `docs/REPOST_V2_MARKETING_PHASE1.md`: Marketing landing page implementation record.
+- `docs/NETLIFY_DEPLOYMENT.md`: Netlify deployment, environment, callback, Supabase Auth URL, and cron notes.
 - `README.md`: Public repository overview, setup summary, architecture notes, and contribution guidance.
+- `netlify.toml`: Netlify build settings, Node version, Next.js publish directory, skew protection, and baseline security headers.
 
 ## Security Principles
 
@@ -345,6 +356,7 @@ Recommended next work:
 - controlled real-account provider integration validation
 - recurring cron job installation after production secrets are configured
 - provider-native analytics ingestion
+- Netlify production deploy, provider callback URL update, and legal-page review
 
 ## Documentation Maintenance Rules
 
@@ -393,3 +405,8 @@ Recommended next work:
 - Completed navigation expansion Phase 9 safe E2E expansion by adding protected API guard checks, invalid media rejection, draft persistence/reopen coverage, cross-user draft isolation, scheduled post lifecycle polling, and a no-provider worker run that records `connection_missing`.
 - Added the root `README.md` so visitors and contributors can understand the product, stack, setup path, Supabase architecture, provider integration status, and contribution rules quickly.
 - Replaced the root dashboard redirect with a public, conversion-focused marketing landing page for RE-post, including creator-native messaging, product preview, social motion, placeholder trust marks, and a two-row testimonial carousel.
+
+### 2026-04-20
+
+- Added public `/privacy`, `/terms`, and `/data-deletion` pages for provider dashboard review and Meta app details.
+- Added `netlify.toml`, Node 22 engine guidance, deployment docs, README deployment notes, and setup docs for Netlify.

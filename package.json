@@ -3,6 +3,9 @@
   "version": "2.0.0",
   "private": true,
   "description": "RE-post v2 creator command center built with Next.js, TypeScript, and Supabase.",
+  "engines": {
+    "node": ">=22.0.0"
+  },
   "scripts": {
     "dev": "next dev",
     "dev:all": "next dev",

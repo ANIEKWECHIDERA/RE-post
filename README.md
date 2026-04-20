@@ -143,6 +143,36 @@ npm audit --audit-level=high
 exercise safe app flows, and delete those users afterward. It does not call
 LinkedIn, Facebook, or Instagram.
 
+## Deployment
+
+The repository is prepared for Netlify deployment with [netlify.toml](./netlify.toml).
+
+Netlify build settings:
+
+```text
+Build command: npm run build
+Publish directory: .next
+Node version: 22
+```
+
+After the first deploy, set `PUBLISH_WORKER_URL` to:
+
+```text
+https://your-netlify-domain.netlify.app/api/publish/run
+```
+
+Then add the deployed OAuth callback URLs in each provider dashboard and add the
+deployed site URL in Supabase Auth settings. See
+[docs/NETLIFY_DEPLOYMENT.md](./docs/NETLIFY_DEPLOYMENT.md).
+
+Public legal pages for provider review:
+
+```text
+/privacy
+/terms
+/data-deletion
+```
+
 ## Supabase
 
 The app uses Supabase for:
@@ -222,6 +252,7 @@ Important docs:
 - [docs/REPOST_V2_PHASE0.md](./docs/REPOST_V2_PHASE0.md): discovery and target architecture
 - [docs/REPOST_V2_NAV_PHASE9.md](./docs/REPOST_V2_NAV_PHASE9.md): latest safe E2E expansion
 - [docs/REPOST_V2_MARKETING_PHASE1.md](./docs/REPOST_V2_MARKETING_PHASE1.md): public landing page implementation notes
+- [docs/NETLIFY_DEPLOYMENT.md](./docs/NETLIFY_DEPLOYMENT.md): Netlify deployment, environment, callback, and cron notes
 
 Phase docs are intentionally kept in the repo so future developers and coding
 agents can understand why the system is shaped this way.

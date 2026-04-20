@@ -636,11 +636,11 @@ function MarketingFooter() {
             ]}
           />
           <FooterLinks
-            title="Social"
+            title="Legal"
             links={[
-              ["LinkedIn", "#"],
-              ["Instagram", "#"],
-              ["Support", "#"],
+              ["Privacy", "/privacy"],
+              ["Terms", "/terms"],
+              ["Data deletion", "/data-deletion"],
             ]}
           />
         </div>

@@ -133,6 +133,33 @@ Before scheduling cron:
    - `repost_publish_worker_function_jwt`
 4. Schedule `public.invoke_publish_worker_cron(10)` every minute through the SQL runbook.
 
+## Netlify Deployment
+
+The repository includes `netlify.toml` for Netlify deployment.
+
+```text
+Build command: npm run build
+Publish directory: .next
+Node version: 22
+```
+
+After the first deploy, set `PUBLISH_WORKER_URL` to the deployed worker route:
+
+```text
+https://your-netlify-domain.netlify.app/api/publish/run
+```
+
+Public legal pages are available for provider review:
+
+```text
+/privacy
+/terms
+/data-deletion
+```
+
+See `docs/NETLIFY_DEPLOYMENT.md` for full environment, OAuth callback, Supabase
+Auth URL, and cron deployment notes.
+
 ## Known Limitations
 
 - LinkedIn text/image adapter code exists, but real-account validation still requires approved credentials and `PUBLISH_PROVIDER_MODE=live`.

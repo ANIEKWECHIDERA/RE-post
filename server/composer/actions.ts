@@ -13,6 +13,7 @@ import {
 import { composerServerSchema } from '@/schemas/post';
 import type { Platform } from '@/schemas/platform';
 import { getCurrentUser } from '@/server/auth/session';
+import { triggerPublishWorkerNow } from '@/server/publishing/worker-trigger';
 import {
   isAtLeastOneMinuteInFuture,
   parseCreatorScheduledTime,
@@ -246,6 +247,11 @@ export async function createComposerPostAction(
         : 'Your post is queued for the publishing engine.',
   });
 
+  const workerTrigger =
+    parsed.data.scheduleMode === 'now'
+      ? await triggerPublishWorkerNow()
+      : { ok: false as const, reason: 'not_configured' as const };
+
   revalidatePath('/dashboard');
   revalidatePath('/compose');
   revalidatePath('/drafts');
@@ -256,7 +262,9 @@ export async function createComposerPostAction(
     message:
       parsed.data.scheduleMode === 'scheduled'
         ? 'Post scheduled. The publishing worker will handle it later.'
-        : 'Post queued. The publishing worker can pick it up now.',
+        : workerTrigger.ok
+          ? 'Post sent to the publishing worker now.'
+          : 'Post queued. The publishing worker will pick it up shortly.',
     postId,
   };
 }

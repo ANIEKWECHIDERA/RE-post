@@ -11,8 +11,10 @@ import {
   duplicateScheduledPostSchema,
   editScheduledPostSchema,
   reschedulePostSchema,
+  retryFailedPostSchema,
 } from '@/schemas/scheduling';
 import { getCurrentUser } from '@/server/auth/session';
+import { triggerPublishWorkerNow } from '@/server/publishing/worker-trigger';
 import {
   isAtLeastOneMinuteInFuture,
   parseCreatorScheduledTime,
@@ -320,6 +322,93 @@ export async function duplicateScheduledPostAction(formData: FormData) {
 
   revalidatePath('/drafts');
   revalidatePath('/schedule');
+}
+
+export async function retryFailedPostAction(formData: FormData) {
+  const supabase = await createSupabaseServerClient();
+  const user = await getCurrentUser();
+  const parsed = retryFailedPostSchema.safeParse({
+    postId: formData.get('postId'),
+  });
+
+  if (!supabase || !user || !parsed.success) {
+    return;
+  }
+
+  const now = new Date().toISOString();
+
+  // Manual retry means the creator has taken an explicit recovery action, often
+  // after reconnecting a provider account. We reset the job attempt budget while
+  // preserving historical publish_attempt rows for auditability.
+  const { data: updatedPosts } = await supabase
+    .from('posts')
+    .update({
+      status: 'queued',
+      schedule_mode: 'now',
+      scheduled_at: null,
+    })
+    .eq('id', parsed.data.postId)
+    .eq('user_id', user.id)
+    .in('status', ['failed', 'partially_failed'])
+    .select('id');
+
+  if (!updatedPosts?.length) {
+    return;
+  }
+
+  await supabase
+    .from('post_platform_targets')
+    .update({
+      status: 'pending',
+      last_error_code: null,
+      last_error_message: null,
+    })
+    .eq('post_id', parsed.data.postId)
+    .eq('user_id', user.id)
+    .in('status', ['failed', 'retry_scheduled']);
+
+  const { data: jobs } = await supabase
+    .from('publish_jobs')
+    .update({
+      status: 'queued',
+      run_at: now,
+      claimed_at: null,
+      locked_until: null,
+      worker_id: null,
+      attempts_count: 0,
+      last_error_code: null,
+      last_error_message: null,
+    })
+    .eq('post_id', parsed.data.postId)
+    .eq('user_id', user.id)
+    .in('status', ['failed', 'partially_failed', 'canceled'])
+    .select('id');
+
+  if (!jobs?.length) {
+    await supabase.from('publish_jobs').insert({
+      user_id: user.id,
+      post_id: parsed.data.postId,
+      status: 'queued',
+      run_at: now,
+      idempotency_key: `${parsed.data.postId}:manual-retry:${Date.now()}`,
+    });
+  }
+
+  await supabase.from('activity_events').insert({
+    user_id: user.id,
+    post_id: parsed.data.postId,
+    type: 'publish_queued',
+    title: 'Retry queued',
+    message: 'The failed post was sent back to the publishing worker.',
+    metadata: {
+      source: 'manual_retry',
+    },
+  });
+
+  await triggerPublishWorkerNow();
+
+  revalidatePath('/schedule');
+  revalidatePath('/dashboard');
 }
 
 export async function deleteScheduledPostAction(formData: FormData) {

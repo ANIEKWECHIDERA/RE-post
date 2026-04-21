@@ -23,6 +23,10 @@ export const deleteScheduledPostSchema = z.object({
   postId: z.string().uuid(),
 });
 
+export const retryFailedPostSchema = z.object({
+  postId: z.string().uuid(),
+});
+
 export type CancelScheduledPostInput = z.infer<
   typeof cancelScheduledPostSchema
 >;
@@ -34,3 +38,4 @@ export type DuplicateScheduledPostInput = z.infer<
 export type DeleteScheduledPostInput = z.infer<
   typeof deleteScheduledPostSchema
 >;
+export type RetryFailedPostInput = z.infer<typeof retryFailedPostSchema>;

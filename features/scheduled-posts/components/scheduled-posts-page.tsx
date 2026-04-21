@@ -5,6 +5,7 @@ import {
   Copy,
   Filter,
   Pencil,
+  RefreshCcw,
   Trash2,
   XCircle,
 } from 'lucide-react';
@@ -32,6 +33,7 @@ import {
   duplicateScheduledPostAction,
   editScheduledPostAction,
   reschedulePostAction,
+  retryFailedPostAction,
 } from '@/server/scheduling/actions';
 import type { PostStatus, SocialPlatform } from '@/types/database';
 import type {
@@ -63,6 +65,14 @@ const dateFilters = [
 ] as const;
 
 type DateFilter = (typeof dateFilters)[number]['value'];
+type QueueActionKind =
+  | 'cancel'
+  | 'delete'
+  | 'duplicate'
+  | 'edit'
+  | 'reschedule'
+  | 'retry';
+type PendingQueueAction = { postId: string; kind: QueueActionKind } | null;
 
 export function ScheduledPostsPage({
   initialData,
@@ -74,6 +84,7 @@ export function ScheduledPostsPage({
   const [statusFilter, setStatusFilter] = useState<ScheduledPostStatusGroup | 'all'>('all');
   const [platformFilter, setPlatformFilter] = useState<SocialPlatform | 'all'>('all');
   const [dateFilter, setDateFilter] = useState<DateFilter>('all');
+  const [pendingAction, setPendingAction] = useState<PendingQueueAction>(null);
   const [timezone] = useState(
     () => Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
   );
@@ -101,7 +112,8 @@ export function ScheduledPostsPage({
   });
 
   return (
-    <section className="grid gap-6">
+    <section className="relative grid gap-6">
+      {pendingAction ? <QueueBusyOverlay kind={pendingAction.kind} /> : null}
       <Card className="overflow-hidden rounded-lg border bg-card shadow-soft">
         <CardHeader className="grid gap-4 md:grid-cols-[1fr_auto] md:items-center">
           <div>
@@ -155,7 +167,10 @@ export function ScheduledPostsPage({
             <ScheduledPostCard
               key={post.id}
               minimumScheduleTime={minimumScheduleTime}
+              pageBusy={Boolean(pendingAction)}
+              pendingAction={pendingAction?.postId === post.id ? pendingAction : null}
               post={post}
+              setPendingAction={setPendingAction}
               timezone={timezone}
             />
           ))}
@@ -194,26 +209,50 @@ function FilterPills<TValue extends string>({
   );
 }
 
+function QueueBusyOverlay({ kind }: { kind: QueueActionKind }) {
+  return (
+    <div className="absolute inset-0 z-20 grid place-items-center rounded-lg bg-white/80 backdrop-blur-sm">
+      <div className="rounded-lg border bg-background px-4 py-3 text-sm font-medium shadow-soft">
+        {kind === 'retry' ? 'Retrying post now...' : 'Updating queue...'}
+      </div>
+    </div>
+  );
+}
+
 function ScheduledPostCard({
   post,
   minimumScheduleTime,
+  pageBusy,
+  pendingAction,
+  setPendingAction,
   timezone,
 }: {
   post: ScheduledPostListItem;
   minimumScheduleTime: string;
+  pageBusy: boolean;
+  pendingAction: PendingQueueAction;
+  setPendingAction: (value: PendingQueueAction) => void;
   timezone: string;
 }) {
   const canMutate = canEditOrReschedule(post.status);
   const queryClient = useQueryClient();
+  const isRetrying = pendingAction?.kind === 'retry';
   const refreshAfterAction = async (
+    kind: QueueActionKind,
     action: (formData: FormData) => Promise<void>,
     formData: FormData,
   ) => {
-    await action(formData);
-    await Promise.all([
-      queryClient.invalidateQueries({ queryKey: ['scheduled-posts'] }),
-      queryClient.invalidateQueries({ queryKey: ['dashboard-summary'] }),
-    ]);
+    setPendingAction({ postId: post.id, kind });
+
+    try {
+      await action(formData);
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['scheduled-posts'] }),
+        queryClient.invalidateQueries({ queryKey: ['dashboard-summary'] }),
+      ]);
+    } finally {
+      setPendingAction(null);
+    }
   };
 
   return (
@@ -246,7 +285,7 @@ function ScheduledPostCard({
               </Badge>
             ))}
           </div>
-          {post.job?.lastErrorMessage ? (
+          {post.job?.lastErrorMessage && !isRetrying ? (
             <p className="mt-2 text-xs text-destructive">
               {post.job.lastErrorMessage}
             </p>
@@ -267,7 +306,7 @@ function ScheduledPostCard({
               </summary>
               <form
                 action={formData =>
-                  refreshAfterAction(editScheduledPostAction, formData)
+                  refreshAfterAction('edit', editScheduledPostAction, formData)
                 }
                 className="mt-3 grid gap-3"
               >
@@ -275,14 +314,14 @@ function ScheduledPostCard({
                 <Textarea
                   className="min-h-28 rounded-md"
                   defaultValue={post.body}
-                  disabled={!canMutate}
+                  disabled={!canMutate || pageBusy}
                   maxLength={3000}
                   name="body"
                   required
                 />
                 <Button
                   className="w-fit rounded-md"
-                  disabled={!canMutate}
+                  disabled={!canMutate || pageBusy}
                   size="sm"
                   type="submit"
                 >
@@ -298,7 +337,7 @@ function ScheduledPostCard({
               </summary>
               <form
                 action={formData =>
-                  refreshAfterAction(reschedulePostAction, formData)
+                  refreshAfterAction('reschedule', reschedulePostAction, formData)
                 }
                 className="mt-3 flex flex-wrap gap-2"
               >
@@ -307,7 +346,7 @@ function ScheduledPostCard({
                 <input
                   className="h-8 rounded-md border bg-background px-3 text-sm"
                   defaultValue={toDateTimeLocal(post.scheduledAt)}
-                  disabled={!canMutate}
+                  disabled={!canMutate || pageBusy}
                   min={minimumScheduleTime}
                   name="scheduledAt"
                   required
@@ -315,7 +354,7 @@ function ScheduledPostCard({
                 />
                 <Button
                   className="rounded-md"
-                  disabled={!canMutate}
+                  disabled={!canMutate || pageBusy}
                   size="sm"
                   type="submit"
                   variant="outline"
@@ -328,24 +367,48 @@ function ScheduledPostCard({
             <div className="flex flex-wrap gap-2">
               <form
                 action={formData =>
-                  refreshAfterAction(duplicateScheduledPostAction, formData)
+                  refreshAfterAction('retry', retryFailedPostAction, formData)
                 }
               >
                 <input name="postId" type="hidden" value={post.id} />
-                <Button className="rounded-md" size="sm" type="submit" variant="outline">
+                <Button
+                  className="rounded-md"
+                  disabled={!canRetry(post.status) || pageBusy}
+                  size="sm"
+                  type="submit"
+                >
+                  <RefreshCcw
+                    className={`mr-2 h-4 w-4 ${isRetrying ? 'animate-spin' : ''}`}
+                  />
+                  {isRetrying ? 'Retrying...' : 'Retry now'}
+                </Button>
+              </form>
+              <form
+                action={formData =>
+                  refreshAfterAction('duplicate', duplicateScheduledPostAction, formData)
+                }
+              >
+                <input name="postId" type="hidden" value={post.id} />
+                <Button
+                  className="rounded-md"
+                  disabled={pageBusy}
+                  size="sm"
+                  type="submit"
+                  variant="outline"
+                >
                   <Copy className="mr-2 h-4 w-4" />
                   Duplicate
                 </Button>
               </form>
               <form
                 action={formData =>
-                  refreshAfterAction(cancelScheduledPostAction, formData)
+                  refreshAfterAction('cancel', cancelScheduledPostAction, formData)
                 }
               >
                 <input name="postId" type="hidden" value={post.id} />
                 <Button
                   className="rounded-md"
-                  disabled={!canCancel(post.status)}
+                  disabled={!canCancel(post.status) || pageBusy}
                   size="sm"
                   type="submit"
                   variant="outline"
@@ -356,13 +419,13 @@ function ScheduledPostCard({
               </form>
               <form
                 action={formData =>
-                  refreshAfterAction(deleteScheduledPostAction, formData)
+                  refreshAfterAction('delete', deleteScheduledPostAction, formData)
                 }
               >
                 <input name="postId" type="hidden" value={post.id} />
                 <Button
                   className="rounded-md"
-                  disabled={!canDelete(post.status)}
+                  disabled={!canDelete(post.status) || pageBusy}
                   size="sm"
                   type="submit"
                   variant="outline"
@@ -434,6 +497,10 @@ function canDelete(status: PostStatus) {
 
 function canCancel(status: PostStatus) {
   return status === 'scheduled' || status === 'queued';
+}
+
+function canRetry(status: PostStatus) {
+  return status === 'failed' || status === 'partially_failed';
 }
 
 function canEditOrReschedule(status: PostStatus) {
